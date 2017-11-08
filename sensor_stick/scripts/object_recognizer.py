@@ -26,34 +26,40 @@ def pcl_callback(pcl_msg):
     # TODO: Convert ROS msg to PCL data
     pcl_raw = ros_to_pcl(pcl_msg)
 
+    # TODO: Statistical noise removal
+    outlier_filter = pcl_raw.make_statistical_outlier_filter()
+    outlier_filter.set_mean_k(50)
+    outlier_filter.set_std_dev_mul_thresh(1.0) # Any point with a mean distance larger than global (mean distance+x*std_dev) will be considered outlier
+    cleaned = outlier_filter.filter()
+
     # TODO: Voxel Grid Downsampling
-    vox = pcl_raw.make_voxel_grid_filter()
+    vox = cleaned.make_voxel_grid_filter()
     vox.set_leaf_size(*([0.01]*3))
-    img = vox.filter()
+    downsampled = vox.filter()
 
     # TODO: PassThrough Filter
-    passthrough = img.make_passthrough_filter()
+    passthrough = downsampled.make_passthrough_filter()
     passthrough.set_filter_field_name('z')
-    passthrough.set_filter_limits(0.6, 1.1)
-    img = passthrough.filter()
+    passthrough.set_filter_limits(0.75, 1.1)
+    sliced = passthrough.filter()
     
     # TODO: RANSAC Plane Segmentation
-    seg = img.make_segmenter()
+    seg = sliced.make_segmenter()
     seg.set_model_type(pcl.SACMODEL_PLANE)
     seg.set_method_type(pcl.SAC_RANSAC)
-    seg.set_distance_threshold(0.01)
+    seg.set_distance_threshold(0.02)
     inliers, coefficients = seg.segment()
 
     # TODO: Extract inliers and outliers
-    cloud_table = img.extract(inliers, negative=False)
-    cloud_objects = img.extract(inliers, negative=True)
+    cloud_table = sliced.extract(inliers, negative=False)
+    cloud_objects = sliced.extract(inliers, negative=True)
 
     # TODO: Euclidean Clustering
     white_cloud = XYZRGB_to_XYZ(cloud_objects)
     kdtree = white_cloud.make_kdtree()
     extractor = white_cloud.make_EuclideanClusterExtraction()
     extractor.set_ClusterTolerance(0.05) #0.1
-    extractor.set_MinClusterSize(100)
+    extractor.set_MinClusterSize(200)
     extractor.set_MaxClusterSize(4000) #8000
     extractor.set_SearchMethod(kdtree)
     cluster_indices = extractor.Extract()
@@ -75,11 +81,20 @@ def pcl_callback(pcl_msg):
     cluster_cloud.from_list(color_cluster_point_list)
 
     # TODO: Convert PCL data to ROS messages
+    ros_raw = pcl_to_ros(pcl_raw)
+    ros_cleaned = pcl_to_ros(cleaned)
+    ros_downsampled = pcl_to_ros(downsampled)
+    ros_sliced = pcl_to_ros(sliced)
     ros_cluster_cloud = pcl_to_ros(cluster_cloud)
     ros_cloud_table = pcl_to_ros(cloud_table)
     ros_cloud_objects = pcl_to_ros(cloud_objects)
 
     # TODO: Publish ROS messages
+    pcl_original_pub.publish(pcl_msg)
+    pcl_raw_pub.publish(ros_raw)
+    pcl_cleaned_pub.publish(ros_cleaned)
+    pcl_downsampled_pub.publish(ros_downsampled)
+    pcl_sliced_pub.publish(ros_sliced)
     pcl_objects_pub.publish(ros_cloud_objects)
     pcl_table_pub.publish(ros_cloud_table)
     pcl_cluster_pub.publish(ros_cluster_cloud)
@@ -100,7 +115,7 @@ def pcl_callback(pcl_msg):
 #        normals = get_normals(ros_cluster)
 #        normal_hist = compute_normal_histograms(normals)
 #        features = np.concatenate((color_hist, normal_hist)).astype(np.float64)
-        features = get_features_ros_cluster)
+        features = get_features(ros_cluster)
         #########################################
         
         # Make the prediction
@@ -132,6 +147,11 @@ if __name__ == '__main__':
     pcl_sub = rospy.Subscriber("/sensor_stick/point_cloud", PointCloud2, pcl_callback, queue_size=1)
 
     # TODO: Create Publishers
+    pcl_original_pub = rospy.Publisher("/pcl_original", PointCloud2, queue_size=1)
+    pcl_raw_pub = rospy.Publisher("/pcl_raw", PointCloud2, queue_size=1)
+    pcl_cleaned_pub = rospy.Publisher("/pcl_cleaned", PointCloud2, queue_size=1)
+    pcl_downsampled_pub = rospy.Publisher("/pcl_downsampled", PointCloud2, queue_size=1)
+    pcl_sliced_pub = rospy.Publisher("/pcl_sliced", PointCloud2, queue_size=1)
     pcl_objects_pub = rospy.Publisher("/pcl_objects", PointCloud2, queue_size=1)
     pcl_table_pub = rospy.Publisher("/pcl_table", PointCloud2, queue_size=1)
     pcl_cluster_pub = rospy.Publisher("/pcl_cluster", PointCloud2, queue_size=1)
