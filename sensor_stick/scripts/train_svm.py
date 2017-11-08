@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
 from sklearn import cross_validation
 from sklearn import metrics
 
@@ -52,17 +53,21 @@ for item in training_set:
 print('Features in Training Set: {}'.format(len(training_set)))
 print('Invalid Features in Training set: {}'.format(len(training_set)-len(feature_list)))
 
-print("Scaling feature columns...")
 X = np.array(feature_list)
-# Fit a per-column scaler
-X_scaler = StandardScaler().fit(X)
-# Apply the scaler to X
-X_train = X_scaler.transform(X)
-y_train = np.array(label_list)
-
+y = np.array(label_list)
 # Convert label strings to numerical encoding
 encoder = LabelEncoder()
-y_train = encoder.fit_transform(y_train)
+y = encoder.fit_transform(y)
+
+print ("Splitting train/test data..")
+# Create a 'held-out' test set:
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=1, random_state=0)
+
+print("Scaling feature columns...")
+# Fit a per-column scaler
+X_scaler = StandardScaler().fit(X_train)
+# Apply the scaler to X
+X_train = X_scaler.transform(X_train)
 
 # Create classifier
 clf = svm.SVC(kernel='rbf')
@@ -95,14 +100,17 @@ accuracy_score = metrics.accuracy_score(y_train, predictions)
 print('accuracy score: '+str(accuracy_score))
 
 confusion_matrix = metrics.confusion_matrix(y_train, predictions)
-
 class_names = encoder.classes_.tolist()
-
 
 #Train the classifier
 print("Training the classifier...")
 clf.fit(X=X_train, y=y_train)
 model = {'classifier': clf, 'classes': encoder.classes_, 'scaler': X_scaler}
+
+# Predict using the held-out test set:
+print("Accuracy with held-out test-set...")
+y_pred = clf.predict(X_scaler.transform(X_test[0].reshape(1,-1)))
+print ("Prediction: {} / Actual: {}".format(y_pred, y_test[0]))
 
 # Save classifier to disk
 print("Saving classifier to disk...")

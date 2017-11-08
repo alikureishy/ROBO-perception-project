@@ -34,7 +34,7 @@ def pcl_callback(pcl_msg):
 
     # TODO: Voxel Grid Downsampling
     vox = cleaned.make_voxel_grid_filter()
-    vox.set_leaf_size(*([0.01]*3))
+    vox.set_leaf_size(*([0.008]*3))
     downsampled = vox.filter()
 
     # TODO: PassThrough Filter
@@ -97,7 +97,7 @@ def pcl_callback(pcl_msg):
     pcl_sliced_pub.publish(ros_sliced)
     pcl_objects_pub.publish(ros_cloud_objects)
     pcl_table_pub.publish(ros_cloud_table)
-    pcl_cluster_pub.publish(ros_cluster_cloud)
+    pcl_cluster_cloud_pub.publish(ros_cluster_cloud)
 
 # Exercise-3 TODOs: 
 
@@ -115,6 +115,8 @@ def pcl_callback(pcl_msg):
 #        normals = get_normals(ros_cluster)
 #        normal_hist = compute_normal_histograms(normals)
 #        features = np.concatenate((color_hist, normal_hist)).astype(np.float64)
+#        if index==0:
+#            pcl_sample_pub.publish(ros_cluster)
         features = get_features(ros_cluster)
         #########################################
         
@@ -154,7 +156,8 @@ if __name__ == '__main__':
     pcl_sliced_pub = rospy.Publisher("/pcl_sliced", PointCloud2, queue_size=1)
     pcl_objects_pub = rospy.Publisher("/pcl_objects", PointCloud2, queue_size=1)
     pcl_table_pub = rospy.Publisher("/pcl_table", PointCloud2, queue_size=1)
-    pcl_cluster_pub = rospy.Publisher("/pcl_cluster", PointCloud2, queue_size=1)
+    pcl_cluster_cloud_pub = rospy.Publisher("/pcl_cluster", PointCloud2, queue_size=1)
+#    pcl_sample_pub = rospy.Publisher("/pcl_sample", PointCloud2, queue_size=1)
     object_markers_pub = rospy.Publisher("/object_markers", Marker, queue_size=1)
     detected_objects_pub = rospy.Publisher("/detected_objects", DetectedObjectsArray, queue_size=1)
 

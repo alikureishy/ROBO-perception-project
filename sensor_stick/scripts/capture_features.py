@@ -21,6 +21,7 @@ def get_normals(cloud):
 
 if __name__ == '__main__':
     rospy.init_node('capture_node')
+#    pcl_sample_pub = rospy.Publisher("/pcl_sample", PointCloud2, queue_size=1)
 
     models = [\
        'beer',
@@ -38,7 +39,7 @@ if __name__ == '__main__':
     for model_name in models:
         spawn_model(model_name)
 
-        for i in range(35):
+        for i in range(100):
             print (model_name, i)
             # make five attempts to get a valid a point cloud then give up
             sample_was_good = False
@@ -61,6 +62,7 @@ if __name__ == '__main__':
 #            normals = get_normals(sample_cloud)
 #            nhists = compute_normal_histograms(normals)
 #            feature = np.concatenate((chists, nhists))
+#            pcl_sample_pub.publish(sample_cloud)
             feature = get_features(sample_cloud)
             #############################################################################
             
