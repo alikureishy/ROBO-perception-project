@@ -12,7 +12,7 @@ from sensor_stick.features import get_features
 from sensor_stick.srv import GetNormals
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import PointCloud2
-
+from sensor_stick.plotter import *
 
 def get_normals(cloud):
     get_normals_prox = rospy.ServiceProxy('/feature_extractor/get_normals', GetNormals)
@@ -35,12 +35,14 @@ if __name__ == '__main__':
     # Disable gravity and delete the ground plane
     initial_setup()
     labeled_features = []
+    illustrator = Illustrator(True)
 
-    for model_name in models:
+    for j, model_name in enumerate(models):
         spawn_model(model_name)
 
-        for i in range(100):
+        for i in range(10):
             print (model_name, i)
+            frame = illustrator.nextframe(j*10 + i)
             # make five attempts to get a valid a point cloud then give up
             sample_was_good = False
             try_count = 0
@@ -64,6 +66,12 @@ if __name__ == '__main__':
 #            feature = np.concatenate((chists, nhists))
 #            pcl_sample_pub.publish(sample_cloud)
             feature = get_features(sample_cloud)
+            if (True):
+                frame.newsection(model_name)
+                graph = Graph(model_name, range(feature.size), feature, "Bins", "Normalized Occurrences")
+                frame.add(graph)
+                frame.render()
+            
             #############################################################################
             
             labeled_features.append([feature, model_name])
