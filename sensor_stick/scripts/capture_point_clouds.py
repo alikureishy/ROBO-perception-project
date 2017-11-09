@@ -60,9 +60,7 @@ if __name__ == '__main__':
             try_count = 0
             while not sample_was_good and try_count < 5:
                 sample_cloud = capture_sample()
-                print(type(sample_cloud))
                 sample_cloud_pcl = ros_to_pcl(sample_cloud)
-                print(type(sample_cloud_pcl))
                 sample_cloud_arr = sample_cloud_pcl.to_array()
 
                 # Check for invalid clouds.

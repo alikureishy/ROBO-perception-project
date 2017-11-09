@@ -74,9 +74,9 @@ def compute_normal_histograms(normal_cloud):
 #    norm_x_hist = np.histogram(norm_x_vals, bins=32, range=(-1.0,1.0))
 #    norm_y_hist = np.histogram(norm_y_vals, bins=32, range=(-1.0,1.0))
 #    norm_z_hist = np.histogram(norm_z_vals, bins=32, range=(-1.0,1.0))
-    norm_x_hist = np.histogram(norm_x_vals, bins=32, range=(-1.0,1.0))
-    norm_y_hist = np.histogram(norm_y_vals, bins=32, range=(-1.0,1.0))
-    norm_z_hist = np.histogram(norm_z_vals, bins=32, range=(-1.0,1.0))
+    norm_x_hist = np.histogram(norm_x_vals, bins=16, range=(-1.0,1.0))
+    norm_y_hist = np.histogram(norm_y_vals, bins=16, range=(-1.0,1.0))
+    norm_z_hist = np.histogram(norm_z_vals, bins=16, range=(-1.0,1.0))
 
 
     # TODO: Concatenate and normalize the histograms
