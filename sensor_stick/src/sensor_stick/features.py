@@ -46,7 +46,6 @@ def compute_color_histograms(cloud, using_hsv=False):
 
 
 def compute_normal_histograms(normal_cloud):
-    print ("x")
     norm_x_vals = []
     norm_y_vals = []
     norm_z_vals = []

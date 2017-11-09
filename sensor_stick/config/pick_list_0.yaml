@@ -1,0 +1,15 @@
+object_list:
+  - name: beer
+    group: green
+  - name: bowl
+    group: green
+  - name: create
+    group: green
+  - name: disk_part
+    group: green
+  - name: hammer
+    group: green
+  - name: plastic_cup
+    group: green
+  - name: soda_can
+    group: green

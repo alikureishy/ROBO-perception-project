@@ -61,20 +61,20 @@ def pcl_callback(pcl_msg):
 
     # TODO: Voxel Grid Downsampling
     vox = cleaned.make_voxel_grid_filter()
-    vox.set_leaf_size(*([0.01]*3))
+    vox.set_leaf_size(*([0.005]*3))
     downsampled = vox.filter()
 
     # TODO: PassThrough Filter
     passthrough = downsampled.make_passthrough_filter()
     passthrough.set_filter_field_name('z')
-    passthrough.set_filter_limits(0.6, 1.1)
+    passthrough.set_filter_limits(0.75, 1.1)
     sliced = passthrough.filter()
 
     # TODO: RANSAC Plane Segmentation
     seg = sliced.make_segmenter()
     seg.set_model_type(pcl.SACMODEL_PLANE)
     seg.set_method_type(pcl.SAC_RANSAC)
-    seg.set_distance_threshold(0.01)
+    seg.set_distance_threshold(0.02)
     inliers, coefficients = seg.segment()
 
     # TODO: Extract inliers and outliers
@@ -86,7 +86,7 @@ def pcl_callback(pcl_msg):
     kdtree = white_cloud.make_kdtree()
     extractor = white_cloud.make_EuclideanClusterExtraction()
     extractor.set_ClusterTolerance(0.05) #0.1
-    extractor.set_MinClusterSize(100)
+    extractor.set_MinClusterSize(200)
     extractor.set_MaxClusterSize(4000) #8000
     extractor.set_SearchMethod(kdtree)
     cluster_indices = extractor.Extract()
@@ -140,7 +140,7 @@ def pcl_callback(pcl_msg):
 #        normals = get_normals(ros_cluster)
 #        normal_hist = compute_normal_histograms(normals)
 #        features = np.concatenate((color_hist, normal_hist)).astype(np.float64)
-        features = get_features_ros_cluster)
+        features = get_features(ros_cluster)
         #########################################
 
         # Make the prediction
@@ -166,10 +166,10 @@ def pcl_callback(pcl_msg):
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
     # Could add some logic to determine whether or not your object detections are robust
     # before calling pr2_mover()
-    try:
-        pr2_mover(detected_objects)
-    except rospy.ROSInterruptException:
-        pass
+#    try:
+#        pr2_mover(detected_objects)
+#    except rospy.ROSInterruptException:
+#        pass
 
 # function to load parameters and request PickPlace service
 def pr2_mover(object_list):
