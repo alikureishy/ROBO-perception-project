@@ -19,22 +19,18 @@ from sensor_msgs.msg import PointCloud2
 class FileNamer(object):
     def __init__(self, folder, prefix, extension, maxfiles=1000, overwrite=False):
         self.__folder__ = folder
-        print("Folder", folder)
         self.__prefix__ = prefix
         self.__extension__ = extension
         self.__max_files__ = maxfiles
 
     def get_for_idx(self, idx):
         name = os.path.join(self.__folder__, '{}_{}.{}'.format(self.__prefix__, idx, self.__extension__))
-        print ("Name", name)
         return name
     
     def get_file_count(self):
         count = 0
-        print ("Counting..")
         for idx in range(1, self.__max_files__+1):
             if not isfile(self.get_for_idx(idx)):
-                print ("Not found for idx: {}".format(idx))
                 break
             else:
                 count += 1
