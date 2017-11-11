@@ -1,0 +1,32 @@
+object_list:
+  - name: beer
+    group: green
+  - name: bowl
+    group: green
+  - name: create
+    group: green
+  - name: disk_part
+    group: green
+  - name: hammer
+    group: green
+  - name: plastic_cup
+    group: green
+  - name: soda_can
+    group: green
+  - name: sticky_notes
+    group: red
+  - name: book
+    group: red
+  - name: snacks
+    group: green
+  - name: biscuits
+    group: green
+  - name: eraser
+    group: red
+  - name: soap2
+    group: green
+  - name: soap
+    group: green
+  - name: glue
+    group: red
+

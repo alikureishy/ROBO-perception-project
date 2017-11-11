@@ -59,12 +59,12 @@ if __name__ == '__main__':
     labeled_features = []
     for i, entry in enumerate(object_list):
         model_name = entry['name']
-        count = min(args.count, samplecounts[model_name])
         filenamer = filenamers[model_name]
-        print("{}: Model: {}. {} samples".format(i, model_name, count))
-        for j in range(0, count):
-            r = random.randint(1, count)
+        print("{}: Model: {}. Avaiable samples {}. Selecting {}...".format(i, model_name, samplecounts[model_name], args.count))
+        for j in range(0, args.count):
+            r = random.randint(1, samplecounts[model_name])
             pcfile = filenamer.get_for_idx(r)
+            print("\t{}: Processing {} ...".format(j, pcfile))
             point_cloud = pcl.load_XYZRGB(pcfile)
             point_cloud_ros = pcl_to_ros(point_cloud)
             features = get_features(point_cloud_ros)

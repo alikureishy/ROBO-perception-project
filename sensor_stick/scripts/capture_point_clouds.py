@@ -28,13 +28,13 @@ class FileNamer(object):
         return name
     
     def get_file_count(self):
-        count = 0
-        for idx in range(1, self.__max_files__+1):
-            if not isfile(self.get_for_idx(idx)):
+        count = 1
+        while True:
+            if not isfile(self.get_for_idx(count)):
                 break
             else:
                 count += 1
-        return count
+        return count-1
     
     def next_vacant_name(self):
         # If no folder exists, no point looking
@@ -43,10 +43,7 @@ class FileNamer(object):
 
         # Determine next index. Throw error after __max_files__ reached
         count = self.get_file_count()
-        if count >= self.__max_files__:
-            raise "File count in {} has reached capacity of {}".format(self.__folder__, self.__max_files__)
-        else:
-            filename = self.get_for_idx(count+1)
+        filename = self.get_for_idx(count+1)
         return filename
         
 if __name__ == '__main__':
