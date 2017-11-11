@@ -19,10 +19,11 @@ from geometry_msgs.msg import Pose
 from std_msgs.msg import Float64
 from std_msgs.msg import Int32
 from std_msgs.msg import String
-from pr2_robot.srv import *
+from pr2_robot.srv import PickPlace
 from rospy_message_converter import message_converter
 import yaml
 
+SCENE_NUM = 1
 
 # Helper function to get surface normals
 def get_normals(cloud):
@@ -48,8 +49,9 @@ def send_to_yaml(yaml_filename, dict_list):
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
 
-# Exercise-2 TODOs:
-
+    ###################
+    # Exercise-2 TODOs:
+    ###################
     # TODO: Convert ROS msg to PCL data
     pcl_raw = ros_to_pcl(pcl_msg)
     
@@ -124,7 +126,9 @@ def pcl_callback(pcl_msg):
     pcl_table_pub.publish(ros_cloud_table)
     pcl_cluster_pub.publish(ros_cluster_cloud)
 
-# Exercise-3 TODOs:
+    ###################
+    # Exercise-3 TODOs:
+    ###################
 
     # Classify the clusters! (loop through each detected cluster one at a time)
     detected_objects_labels = []
@@ -171,44 +175,96 @@ def pcl_callback(pcl_msg):
 #    except rospy.ROSInterruptException:
 #        pass
 
+class PickPlaceRequest(object):
+    def __init__(self):
+        self.test_scene_num = Int32()
+        self.object_name = String()
+        self.arm_name = String()
+        self.pick_pose = Pose()
+        self.pick_pose.position.x = 0
+        self.pick_pose.position.y = 0
+        self.pick_pose.position.z = 0
+        self.pick_pose.orientation.x = 0
+        self.pick_pose.orientation.y = 0
+        self.pick_pose.orientation.z = 0
+        self.pick_pose.orientation.w = 0
+        self.place_pose = Pose()
+        self.place_pose.position.x = 0
+        self.place_pose.position.y = 0
+        self.place_pose.position.z = 0
+        self.place_pose.orientation.x = 0
+        self.place_pose.orientation.y = 0
+        self.place_pose.orientation.z = 0
+        self.place_pose.orientation.w = 0
+
+def do_pick_and_place(pick_place_request):
+    # Wait for 'pick_place_routine' service to come up:
+    rospy.wait_for_service('pick_place_routine')
+
+    try:
+        pick_place_routine = rospy.ServiceProxy('pick_place_routine', PickPlace)
+        # TODO: Insert your message variables to be sent as a service request:
+        resp = pick_place_routine(pick_place_request.test_scene_num, \
+                                  pick_place_request.object_name, \
+                                  pick_place_request.arm_name, \
+                                  pick_place_request.pick_pose, \
+                                  pick_place_request.place_pose)
+        print ("Response: ",resp.success)
+    except rospy.ServiceException, e:
+        print "Service call failed: %s"%e
+
+# Rotate PR2 in place to capture side tables for the collision map
+def do_capture_sides():
+    pass
+
 # function to load parameters and request PickPlace service
-def pr2_mover(object_list):
+def pr2_mover(detected_objects):
+    # Map: Group -> Dropboxes #
+    box_list = rospy.get_param('/dropbox')
+    group_dict = {}
+    for box in box_list:
+        group_dict[box.group] = [box.name, box.position]
 
-    # TODO: Initialize variables
+    # Map: Model -> Centroids #
+    centroid_dict = {} # to be lookup of model --> list of tuples (x, y, z)
+    for obj in detected_objects:
+        points_arr = ros_to_pcl(obj.cloud).to_array()
+        centroid = np.asscalar(np.mean(points_arr, axis=0)[:3])
+        centroids[obj.label] = centroids.get(obj.label, []).append(centroid)
 
-    # TODO: Get/Read parameters
+    # Rotate PR2 to capture side-tables for the collision map:
+    do_capture_sides()
 
-    # TODO: Parse parameters into individual variables
+    # List: Yaml detections #
+    object_list = rospy.get_param('/object_list')
+    yaml_list = []
+    for i, entry in enumerate(object_list):
+        model = entry['name']
+        group = entry['group']
+        
+        centroids = centroid_dict [model]
+        if centroids is not None:
+            for centroid in centroids:
+                # Get group/box info:
+                box_name, box_position = group_dict[group]
+            
+                # Create PickPlace request
+                pick_place_request = PickPlaceRequest()
+                pick_place_request.test_scene_num.data = SCENE_NUM
+                pick_place_request.object_name.data = model
+                pick_place_request.arm_name.data = box_name # arm_name = box_name
+                pick_place_request.pick_pose.position.x = centroid[0]
+                pick_place_request.pick_pose.position.y = centroid[1]
+                pick_place_request.pick_pose.position.z = centroid[2]
+                pick_place_request.place_pose.position.x = box_position[0]
+                pick_place_request.place_pose.position.y = box_position[1]
+                pick_place_request.place_pose.position.z = box_position[2]
 
-    # TODO: Rotate PR2 in place to capture side tables for the collision map
+                yaml_list.append(pick_place_request)
+#                do_pick_and_place(pick_place_request)
 
-    # TODO: Loop through the pick list
-
-        # TODO: Get the PointCloud for a given object and obtain it's centroid
-
-        # TODO: Create 'place_pose' for the object
-
-        # TODO: Assign the arm to be used for pick_place
-
-        # TODO: Create a list of dictionaries (made with make_yaml_dict()) for later output to yaml format
-
-        # Wait for 'pick_place_routine' service to come up
-        rospy.wait_for_service('pick_place_routine')
-
-        try:
-            pick_place_routine = rospy.ServiceProxy('pick_place_routine', PickPlace)
-
-            # TODO: Insert your message variables to be sent as a service request
-            resp = pick_place_routine(TEST_SCENE_NUM, OBJECT_NAME, WHICH_ARM, PICK_POSE, PLACE_POSE)
-
-            print ("Response: ",resp.success)
-
-        except rospy.ServiceException, e:
-            print "Service call failed: %s"%e
-
-    # TODO: Output your request parameters into output yaml file
-
-
+    # Save all collected pick-place requests into a yaml file:
+    send_to_yaml('yaml_world_{}'.format(SCENE_NUMBER), yaml_list)
 
 if __name__ == '__main__':
 
@@ -216,7 +272,7 @@ if __name__ == '__main__':
     rospy.init_node("advanced_pick_and_place")
 
     # TODO: Create Subscribers
-    pcl_sub = rospy.Subscriber("/camera/depth_registered/points", PointCloud2, pcl_callback, queue_size=1)
+    pcl_sub = rospy.Subscriber("/pr2/world/points", PointCloud2, pcl_callback, queue_size=1)
 
     # TODO: Create Publishers
     pcl_original_pub = rospy.Publisher("/pcl_original", PointCloud2, queue_size=1)

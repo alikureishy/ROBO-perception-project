@@ -34,7 +34,7 @@ if __name__ == '__main__':
     rospy.init_node("advanced_pick_and_place")
 
     # TODO: Create Subscribers
-    pcl_sub = rospy.Subscriber("/camera/depth_registered/points", PointCloud2, pcl_callback, queue_size=1)
+    pcl_sub = rospy.Subscriber("/pr2/world/points", PointCloud2, pcl_callback, queue_size=1)
 
     # TODO: Create Publishers
     pcl_original_pub = rospy.Publisher("/pcl_original", PointCloud2, queue_size=1)
