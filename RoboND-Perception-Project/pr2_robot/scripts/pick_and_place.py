@@ -3,6 +3,7 @@
 # Import modules
 import numpy as np
 import sklearn
+import argparse
 from sklearn.preprocessing import LabelEncoder
 import pickle
 from sensor_stick.srv import GetNormals
@@ -22,8 +23,6 @@ from std_msgs.msg import String
 from pr2_robot.srv import PickPlace
 from rospy_message_converter import message_converter
 import yaml
-
-SCENE_NUM = 1
 
 # Helper function to get surface normals
 def get_normals(cloud):
@@ -250,7 +249,7 @@ def pr2_mover(detected_objects):
             
                 # Create PickPlace request
                 pick_place_request = PickPlaceRequest()
-                pick_place_request.test_scene_num.data = SCENE_NUM
+                pick_place_request.test_scene_num.data = args.test_scene
                 pick_place_request.object_name.data = model
                 pick_place_request.arm_name.data = box_name # arm_name = box_name
                 pick_place_request.pick_pose.position.x = centroid[0]
@@ -264,12 +263,17 @@ def pr2_mover(detected_objects):
 #                do_pick_and_place(pick_place_request)
 
     # Save all collected pick-place requests into a yaml file:
-    send_to_yaml('yaml_world_{}'.format(SCENE_NUMBER), yaml_list)
+    send_to_yaml(args.outfile, yaml_list)
 
 if __name__ == '__main__':
-
     # TODO: ROS node initialization
     rospy.init_node("advanced_pick_and_place")
+    parser = argparse.ArgumentParser(description='Perform advanced pick+place')
+    parser.add_argument('-i', dest="infile", required=True, type=str, help='Model file for the object recognition')
+    parser.add_argument('-t', dest="test_scene", required=True, type=int, help='Test scene number')
+    parser.add_argument('-o', dest='outfile', required=True, help='YAML file to save the generated pick+place request sequence')
+
+    args = parser.parse_args()
 
     # TODO: Create Subscribers
     pcl_sub = rospy.Subscriber("/pr2/world/points", PointCloud2, pcl_callback, queue_size=1)
@@ -287,7 +291,7 @@ if __name__ == '__main__':
     detected_objects_pub = rospy.Publisher("/detected_objects", DetectedObjectsArray, queue_size=1)
 
     # TODO: Load Model From disk
-    model = pickle.load(open('model.sav', 'rb'))
+    model = pickle.load(open(args.infile, 'rb'))
     clf = model['classifier']
     encoder = LabelEncoder()
     encoder.classes_ = model['classes']

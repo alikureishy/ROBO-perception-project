@@ -43,7 +43,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Capture point clouds for feature extraction')
     parser.add_argument('-i', dest="infile", required=True, type=str, help='Pickle file with point cloud features')
-    parser.add_argument('-o', dest='outfile', default = "model.pickle", help='File to store the model into')
+    parser.add_argument('-o', dest='outfile', required=True, help='File to store the model into')
     parser.add_argument('-p', dest='plot', action="store_true", default = False, help='Whether to plot the confusion matrix (default: False)')
 
     args = parser.parse_args()

@@ -144,6 +144,9 @@ if __name__ == '__main__':
 
     # TODO: ROS node initialization
     rospy.init_node("object_recognizer")
+    parser = argparse.ArgumentParser(description='Perform sensor_stick object recognition')
+    parser.add_argument('-i', dest="infile", required=True, type=str, help='Model file for the object recognition')
+    args = parser.parse_args()
 
     # TODO: Create Subscribers
     pcl_sub = rospy.Subscriber("/sensor_stick/point_cloud", PointCloud2, pcl_callback, queue_size=1)

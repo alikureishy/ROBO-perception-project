@@ -30,8 +30,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Capture point clouds for feature extraction')
     parser.add_argument('-i', dest="infolder", required=True, type=str, help='Root folder containing model-based sub-folders of point cloud samples')
     parser.add_argument('-y', dest="yaml", required=True, type=str, help='YAML file with model names')
-    parser.add_argument('-c', dest='count', default=10, type=int, help='Num of variations of each model to process (default: 10)')
-    parser.add_argument('-o', dest='outfile', default = "features.pickle", help='Pickle file to save extracted features')
+    parser.add_argument('-c', dest='count', required=True, type=int, help='Num of variations of each model to process (default: 10)')
+    parser.add_argument('-o', dest='outfile', required=True, help='Pickle file to save extracted features')
     parser.add_argument('-p', dest='plot', action="store_true", default = False, help='Whether to plot the feature histograms (default: False)')
 
     args = parser.parse_args()

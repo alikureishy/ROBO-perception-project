@@ -51,8 +51,8 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Capture point clouds for feature extraction')
     parser.add_argument('-y', dest="yaml", required=True, type=str, help='YAML file with model names')
-    parser.add_argument('-c', dest='count', default=10, type=int, help='Num of variations (default: 10)')
-    parser.add_argument('-o', dest='outfolder', default = os.getcwd(), help='Folder to save .pcd files for point cloud samples')
+    parser.add_argument('-c', dest='count', required=True, type=int, help='Num of variations (default: 10)')
+    parser.add_argument('-o', dest='outfolder', required=True, help='Folder to save .pcd files for point cloud samples')
     parser.add_argument('-t', dest='topic', default = None, help='Topic to which to publish the sampled point clouds')
 
     args = parser.parse_args()
