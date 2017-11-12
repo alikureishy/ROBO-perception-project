@@ -19,63 +19,68 @@ from sensor_stick.pcl_helper import *
 def downsample(pc, leaf_ratio=0.005):
     start = time.time()
     
-    vox = pcl_raw.make_voxel_grid_filter()
+    vox = pc.make_voxel_grid_filter()
     vox.set_leaf_size(*([leaf_ratio]*3))
     downsampled = vox.filter()
 
     end = time.time()
     latency = end - start
+    print ("\tDownsampling: {} seconds".format(latency))
     return downsampled, latency
     
-def clean(pc, mean_k=50, std_dev_mul_thresh=1.0)
+def clean(pc, mean_k=50, std_dev_mul_thresh=1.0):
     start = time.time()
     
-    outlier_filter = downsampled.make_statistical_outlier_filter()
-    outlier_filter.set_mean_k(mean)
+    outlier_filter = pc.make_statistical_outlier_filter()
+    outlier_filter.set_mean_k(mean_k)
     outlier_filter.set_std_dev_mul_thresh(std_dev_mul_thresh) # Any point with a mean distance larger than global (mean distance+x*std_dev) will be considered outlier
     cleaned = outlier_filter.filter()
 
     end = time.time()
     latency = end - start
+    print ("\tCleaning: {} seconds".format(latency))
     return cleaned, latency
 
-def slice(pc, field_name='z', limits=[0.75,1.1])
+def slice(pc, field_name='z', limits=[0.75,1.1]):
     start = time.time()
 
-    passthrough = downsampled.make_passthrough_filter()
+    passthrough = pc.make_passthrough_filter()
     passthrough.set_filter_field_name('z')
     passthrough.set_filter_limits(*limits)
     sliced = passthrough.filter()
 
     end = time.time()
     latency = end - start
+    print ("\tPassthrough: {} seconds".format(latency))    
     return sliced, latency
 
-def segmentize(sliced, distance_thresh=0.02)
+def segmentize(pc, distance_thresh=0.02):
     start = time.time()
     
-    seg = sliced.make_segmenter()
+    seg = pc.make_segmenter()
     seg.set_model_type(pcl.SACMODEL_PLANE)
     seg.set_method_type(pcl.SAC_RANSAC)
-    seg.set_distance_threshold(thresh)
+    seg.set_distance_threshold(distance_thresh)
     points, coefficients = seg.segment()
 
     end = time.time()
     latency = end - start
+    print ("\tRansac: {} seconds".format(latency))
     return points, latency
 
-def separate_segments(sliced, points)
+def separate_segments(pc, points):
     start = time.time()
 
-    inliers_cloud = sliced.extract(points, negative=False)
-    outliers_cloud = sliced.extract(points, negative=True)
+    inliers_cloud = pc.extract(points, negative=False)
+    outliers_cloud = pc.extract(points, negative=True)
     extraction_time = time.time()
     
     end = time.time()
     latency = end - start
+    print ("\tExtraction: {} seconds".format(latency))
     return inliers_cloud, outliers_cloud, latency
 
-def clusterize_objects(cloud)
+def clusterize_objects(cloud):
     start = time.time()
     
     white_cloud = XYZRGB_to_XYZ(cloud)
@@ -103,13 +108,15 @@ def clusterize_objects(cloud)
 
     end = time.time()
     latency = end - start
+    print ("\tClusterizing: {} seconds".format(latency))
     return clusterized, latency
 
-def classify_objects(clusters)
+def classify_objects(clusters, cloud):
     start = time.time()
     
     # Classify the clusters! (loop through each detected cluster one at a time)
-    detected_objects_labels = []
+    white_cloud = XYZRGB_to_XYZ(cloud)
+    object_markers = []
     detected_objects = []
     for index, pts_list in enumerate(clusters):
         # Grab the points for the cluster
@@ -121,12 +128,11 @@ def classify_objects(clusters)
         # Make the prediction
         prediction = clf.predict(scaler.transform(features.reshape(1,-1)))
         label = encoder.inverse_transform(prediction)[0]
-        detected_objects_labels.append(label)
 
         # Publish a label into RViz
         label_pos = list(white_cloud[pts_list[0]])
         label_pos[2] += .4
-        object_markers_pub.publish(make_label(label,label_pos, index))
+        object_markers.append(make_label(label,label_pos, index))
 
         # Add the detected object to the list of detected objects.
         do = DetectedObject()
@@ -136,5 +142,27 @@ def classify_objects(clusters)
 
     end = time.time()
     latency = end - start
-    return detected_objects, latency
+    print ("\tClassification: {} seconds".format(latency))
+    return detected_objects, object_markers, latency
 
+
+"""
+    downsampled, latency = downsample(pcl_raw, leaf_ratio=0.05)
+    print ("\tDownsampling: {} seconds".format(latency))
+
+    cleaned, latency = clean(downsampled, mean_k=50, std_dev_mul_thresh=1.0)
+    print ("\tCleaning: {} seconds".format(latency))
+
+    sliced, latency = slice(cleaned, field_name='z', limits=[0.75,1.1])
+    print ("\tPassthrough: {} seconds".format(latency))
+
+    inliers, latency = segmentize(sliced, distance_thresh=0.02)
+    print ("\tRansac: {} seconds".format(latency))
+
+    cloud_table, cloud_objects, latency = separate_segments(sliced, inliers)
+    print ("\tExtraction: {} seconds".format(latency))
+
+    cluster_cloud, latency = clusterize_objects(cloud_objects)
+    print ("\Clusterizing: {} seconds".format(latency))
+
+"""
