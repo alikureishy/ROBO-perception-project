@@ -45,7 +45,7 @@ def slice(pc, field_name='z', limits=[0.75,1.1]):
     start = time.time()
 
     passthrough = pc.make_passthrough_filter()
-    passthrough.set_filter_field_name('z')
+    passthrough.set_filter_field_name(field_name)
     passthrough.set_filter_limits(*limits)
     sliced = passthrough.filter()
 
@@ -109,9 +109,9 @@ def clusterize_objects(cloud):
     end = time.time()
     latency = end - start
     print ("\tClusterizing: {} seconds".format(latency))
-    return clusterized, latency
+    return clusterized, clusters, latency
 
-def classify_objects(clusters, cloud):
+def classify_objects(clusters, cloud, classifier, encoder, scaler):
     start = time.time()
     
     # Classify the clusters! (loop through each detected cluster one at a time)
@@ -120,16 +120,16 @@ def classify_objects(clusters, cloud):
     detected_objects = []
     for index, pts_list in enumerate(clusters):
         # Grab the points for the cluster
-        pcl_cluster = cloud_objects.extract(pts_list)
+        pcl_cluster = cloud.extract(pts_list)
         ros_cluster = pcl_to_ros(pcl_cluster)
 
         features = get_features(ros_cluster)
 
         # Make the prediction
-        prediction = clf.predict(scaler.transform(features.reshape(1,-1)))
+        prediction = classifier.predict(scaler.transform(features.reshape(1,-1)))
         label = encoder.inverse_transform(prediction)[0]
 
-        # Publish a label into RViz
+        # For publishing a label into RViz
         label_pos = list(white_cloud[pts_list[0]])
         label_pos[2] += .4
         object_markers.append(make_label(label,label_pos, index))

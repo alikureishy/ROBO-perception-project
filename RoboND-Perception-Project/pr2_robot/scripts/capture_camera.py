@@ -7,6 +7,7 @@ import numpy as np
 import time
 import argparse
 import os
+import pickle
 from os.path import isfile, isdir
 from os import makedirs
 from sensor_stick.pcl_helper import *
@@ -27,9 +28,10 @@ def parseNumList(string):
 if __name__ == '__main__':
     # TODO: ROS node initialization
     parser = argparse.ArgumentParser(description='Perform advanced pick+place')
+    parser.add_argument('-i', dest="infile", required=True, type=str, help='Model file for the object recognition')
     parser.add_argument('-t', dest="topic", required=True, type=str, help="Name of topic to capture. ['/pr2/world/points', ....]")
     parser.add_argument('-c', dest="countdown", default=0, type=int, help='Number of callbacks to wait before capture')
-    parser.add_argument('-l', dest="levels", nargs='*', default=list(range(0,6)), type=int, help='List of stages to perform [0 = Original] [1 = Downsampled] [2 = Cleaned] [3 = Sliced] [4 = Segmented [5 = Clustered]]')
+    parser.add_argument('-l', dest="levels", nargs='*', default=list(range(0,6)), type=int, help='List of stages to perform [0 = Original] [1 = Downsampled] [2 = Cleaned] [3 = Sliced] [4 = Segmented [5 = Clustered [6 = Classified]]]')
     parser.add_argument('-o', dest='outfolder', required=True, help="Folder where all the pipeline PCDs will be saved")
     args = parser.parse_args()
     print (args)
@@ -64,20 +66,32 @@ if __name__ == '__main__':
             # Slicing
             if 3 in args.levels:
                 image, _ = sliced, latency = slice(image, field_name='z', limits=[0.5,1.5])
-                pcl.save(sliced, os.path.join(args.outfolder, "sliced.pcd"), format="pcd")
+                pcl.save(sliced, os.path.join(args.outfolder, "sliced1.pcd"), format="pcd")
+                image, _ = sliced, latency = slice(image, field_name='y', limits=[-0.4,0.4])
+                pcl.save(sliced, os.path.join(args.outfolder, "sliced2.pcd"), format="pcd")
 
             # Segmentaion and clustering
             if 4 in args.levels:
-                inliers, latency = segmentize(image, distance_thresh=0.02)
+                inliers, latency = segmentize(image, distance_thresh=0.025)
                 table_cloud, non_table_cloud, latency = separate_segments(image, inliers)
                 pcl.save(table_cloud, os.path.join(args.outfolder, "table.pcd"), format="pcd")
                 pcl.save(non_table_cloud, os.path.join(args.outfolder, "non-table.pcd"), format="pcd")
 
                 # Only if we're doing segmentation:
                 if 5 in args.levels:
-                    objects_cloud, latency = clusterize_objects(non_table_cloud)
+                    objects_cloud, clusters, latency = clusterize_objects(non_table_cloud)
                     pcl.save(objects_cloud, os.path.join(args.outfolder, "objects.pcd"), format="pcd")
 
+                    if 6 in args.levels:
+                        model = pickle.load(open(args.infile, 'rb'))
+                        classifier = model['classifier']
+                        encoder = LabelEncoder()
+                        encoder.classes_ = model['classes']
+                        scaler = model['scaler']
+                    
+                        detections, markers, latency = classify_objects(clusters, objects_cloud, classifier, encoder, scaler)
+                        print ("\tFound {} objects: {}".format(len(detections), list(map(lambda x: x.label, detections))))
+            
             counter -= 1
         else:
             print ("\tSnapshot taken. Skipping.")
