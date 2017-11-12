@@ -3,6 +3,7 @@
 # Import modules
 import numpy as np
 import sklearn
+import time
 import argparse
 from sklearn.preprocessing import LabelEncoder
 import pickle
@@ -47,29 +48,39 @@ def send_to_yaml(yaml_filename, dict_list):
 
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
+    print ("Received capture:")
+    start_time = time.time()
 
     ###################
     # Exercise-2 TODOs:
     ###################
     # TODO: Convert ROS msg to PCL data
     pcl_raw = ros_to_pcl(pcl_msg)
+    deserialization_time = time.time()
+    print ("\tDeserialization: {} seconds".format(deserialization_time - start_time))
     
     # TODO: Statistical Outlier Filtering
     outlier_filter = pcl_raw.make_statistical_outlier_filter()
     outlier_filter.set_mean_k(50)
     outlier_filter.set_std_dev_mul_thresh(1.0) # Any point with a mean distance larger than global (mean distance+x*std_dev) will be considered outlier
     cleaned = outlier_filter.filter()
+    cleaning_time = time.time()
+    print ("\tCleaning: {} seconds".format(cleaning_time - deserialization_time))
 
     # TODO: Voxel Grid Downsampling
     vox = cleaned.make_voxel_grid_filter()
     vox.set_leaf_size(*([0.005]*3))
     downsampled = vox.filter()
+    downsampling_time = time.time()
+    print ("\tDownsampling: {} seconds".format(downsampling_time - cleaning_time))
 
     # TODO: PassThrough Filter
     passthrough = downsampled.make_passthrough_filter()
     passthrough.set_filter_field_name('z')
     passthrough.set_filter_limits(0.75, 1.1)
     sliced = passthrough.filter()
+    passthrough_time = time.time()
+    print ("\tPassthrough: {} seconds".format(passthrough_time - downsampling_time))
 
     # TODO: RANSAC Plane Segmentation
     seg = sliced.make_segmenter()
@@ -77,10 +88,14 @@ def pcl_callback(pcl_msg):
     seg.set_method_type(pcl.SAC_RANSAC)
     seg.set_distance_threshold(0.02)
     inliers, coefficients = seg.segment()
+    ransac_time = time.time()
+    print ("\tRansac: {} seconds".format(ransac_time - passthrough_time))
 
     # TODO: Extract inliers and outliers
     cloud_table = sliced.extract(inliers, negative=False)
     cloud_objects = sliced.extract(inliers, negative=True)
+    extraction_time = time.time()
+    print ("\tExtraction: {} seconds".format(extraction_time - ransac_time))
 
     # TODO: Euclidean Clustering
     white_cloud = XYZRGB_to_XYZ(cloud_objects)
@@ -91,6 +106,8 @@ def pcl_callback(pcl_msg):
     extractor.set_MaxClusterSize(4000) #8000
     extractor.set_SearchMethod(kdtree)
     cluster_indices = extractor.Extract()
+    clustering_time = time.time()
+    print ("\tClustering: {} seconds".format(clustering_time - extraction_time))
 
     # TODO: Create Cluster-Mask Point Cloud to visualize each cluster separately
     cluster_color = get_color_list(len(cluster_indices))
@@ -105,25 +122,31 @@ def pcl_callback(pcl_msg):
                                             ])
     cluster_cloud = pcl.PointCloud_PointXYZRGB()
     cluster_cloud.from_list(color_cluster_point_list)
+    masking_time = time.time()
+    print ("\tMasking: {} seconds".format(masking_time - clustering_time))
 
 #    # TODO: Convert PCL data to ROS messages
-    ros_raw = pcl_to_ros(pcl_raw)
-    ros_cleaned = pcl_to_ros(cleaned)
-    ros_downsampled = pcl_to_ros(downsampled)
-    ros_sliced = pcl_to_ros(sliced)
-    ros_cluster_cloud = pcl_to_ros(cluster_cloud)
+#    ros_raw = pcl_to_ros(pcl_raw)
+#    ros_cleaned = pcl_to_ros(cleaned)
+#    ros_downsampled = pcl_to_ros(downsampled)
+#    ros_sliced = pcl_to_ros(sliced)
+#    ros_cluster_cloud = pcl_to_ros(cluster_cloud)
     ros_cloud_table = pcl_to_ros(cloud_table)
     ros_cloud_objects = pcl_to_ros(cloud_objects)
+    serialization_time = time.time()
+    print ("\tSerialization: {} seconds".format(serialization_time - masking_time))
 
 #    # TODO: Publish ROS messages
-    pcl_original_pub.publish(pcl_msg)
-    pcl_raw_pub.publish(ros_raw)
-    pcl_cleaned_pub.publish(ros_cleaned)
-    pcl_downsampled_pub.publish(ros_downsampled)
-    pcl_sliced_pub.publish(ros_sliced)
-    pcl_objects_pub.publish(ros_cloud_objects)
+#    pcl_original_pub.publish(pcl_msg)
+#    pcl_raw_pub.publish(ros_raw)
+#    pcl_cleaned_pub.publish(ros_cleaned)
+#    pcl_downsampled_pub.publish(ros_downsampled)
+#    pcl_sliced_pub.publish(ros_sliced)
+#    pcl_cluster_pub.publish(ros_cluster_cloud)
     pcl_table_pub.publish(ros_cloud_table)
-    pcl_cluster_pub.publish(ros_cluster_cloud)
+    pcl_objects_pub.publish(ros_cloud_objects)
+    publishing_time = time.time()
+    print ("\tPublishing: {} seconds. Clusters found: {}".format(publishing_time - serialization_time, len(cluster_indices)))
 
     ###################
     # Exercise-3 TODOs:
@@ -161,10 +184,16 @@ def pcl_callback(pcl_msg):
         do.label = label
         do.cloud = ros_cluster
         detected_objects.append(do)
+    classification_time = time.time()
+    print ("\tClassification: {} seconds".format(classification_time - publishing_time))
 
     # Publish the list of detected objects
-    rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
     detected_objects_pub.publish(detected_objects)
+    detection_time = time.time()
+    print("\tDetection: {} seconds. Objects: {}".format(detection_time - classification_time, detected_objects_labels))
+
+    total_time = time.time()
+    print ("\tTotal: {} seconds".format(detection_time - start_time))
 
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
     # Could add some logic to determine whether or not your object detections are robust
