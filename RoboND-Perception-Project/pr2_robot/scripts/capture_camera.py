@@ -53,7 +53,7 @@ if __name__ == '__main__':
             
             # Downsampling
             if 1 in args.levels:
-                image, _ = downsampled, latency = downsample(image, leaf_ratio=0.05)
+                image, _ = downsampled, latency = downsample(image, leaf_ratio=0.005)
                 pcl.save(downsampled, os.path.join(args.outfolder, "downsampled.pcd"), format="pcd")
 
             # CLeaning
@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
             # Slicing
             if 3 in args.levels:
-                image, _ = sliced, latency = slice(image, field_name='z', limits=[0.75,1.1])
+                image, _ = sliced, latency = slice(image, field_name='z', limits=[0.5,1.5])
                 pcl.save(sliced, os.path.join(args.outfolder, "sliced.pcd"), format="pcd")
 
             # Segmentaion and clustering
