@@ -59,20 +59,20 @@ def pcl_callback(pcl_msg):
     deserialization_time = time.time()
     print ("\tDeserialization: {} seconds".format(deserialization_time - start_time))
     
+    # TODO: Voxel Grid Downsampling
+    vox = pcl_raw.make_voxel_grid_filter()
+    vox.set_leaf_size(*([0.005]*3))
+    downsampled = vox.filter()
+    downsampling_time = time.time()
+    print ("\tDownsampling: {} seconds".format(downsampling_time - deserialization_time))
+
     # TODO: Statistical Outlier Filtering
-    outlier_filter = pcl_raw.make_statistical_outlier_filter()
+    outlier_filter = downsampled.make_statistical_outlier_filter()
     outlier_filter.set_mean_k(50)
     outlier_filter.set_std_dev_mul_thresh(1.0) # Any point with a mean distance larger than global (mean distance+x*std_dev) will be considered outlier
     cleaned = outlier_filter.filter()
     cleaning_time = time.time()
-    print ("\tCleaning: {} seconds".format(cleaning_time - deserialization_time))
-
-    # TODO: Voxel Grid Downsampling
-    vox = cleaned.make_voxel_grid_filter()
-    vox.set_leaf_size(*([0.005]*3))
-    downsampled = vox.filter()
-    downsampling_time = time.time()
-    print ("\tDownsampling: {} seconds".format(downsampling_time - cleaning_time))
+    print ("\tCleaning: {} seconds".format(cleaning_time - downsampling_time))
 
     # TODO: PassThrough Filter
     passthrough = downsampled.make_passthrough_filter()
