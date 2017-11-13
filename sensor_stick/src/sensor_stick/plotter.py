@@ -110,9 +110,13 @@ class PyplotCanvas(object):
                 h=int(round(np.sqrt(N)))
                 v=int(np.ceil(N/h))
                 diff = (h*v) - N
-                sample = np.zeros((20, 20, 3), dtype=np.uint8)
-                for _ in range(diff):
-                    sections[0].append(Image("--Blank--", sample, None))
+                while diff < 0:
+                    v += 1
+                    diff = (h*v) - N
+                if diff > 0:
+                    sample = np.zeros((20, 20, 3), dtype=np.uint8)
+                    for _ in range(diff):
+                        sections[0].append(Image("--Blank--", sample, None))
                 sections = np.reshape(np.array(sections), (v,h))
         else:
             _, maxsection = max(enumerate(sections), key = lambda tup: len(tup[1]))
@@ -121,7 +125,13 @@ class PyplotCanvas(object):
 
         # Plot:
         if not v is None and not h is None:
-            if self.__figure__ == None:
+            if self.__figure__ == None or len(self.__figure__.get_axes()) is not (v*h):
+                # If we didn't draw the figure before, or if the grid needs to change:
+                needs_refresh = False
+                if self.__figure__ is not None:
+                    plt.close(self.__figure__)
+                    self.__figure__ = None
+                    needs_refresh = True
                 self.__figure__, _  = plt.subplots (v, h)
                 self.__slots__ = []
                 if self.__figure_text__ is None:
