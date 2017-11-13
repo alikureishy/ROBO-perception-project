@@ -81,15 +81,15 @@ def separate_segments(pc, points):
     print ("\tExtraction: {} seconds".format(latency))
     return inliers_cloud, outliers_cloud, latency
 
-def clusterize_objects(cloud, debug=False):
+def clusterize_objects(cloud, cluster_tolerance=0.05, min_size=200, max_size=4000, debug=False):
     start = time()
     
     white_cloud = XYZRGB_to_XYZ(cloud)
     kdtree = white_cloud.make_kdtree()
     extractor = white_cloud.make_EuclideanClusterExtraction()
-    extractor.set_ClusterTolerance(0.05) #0.1
-    extractor.set_MinClusterSize(200)
-    extractor.set_MaxClusterSize(4000) #8000
+    extractor.set_ClusterTolerance(cluster_tolerance) #0.1
+    extractor.set_MinClusterSize(min_size)
+    extractor.set_MaxClusterSize(max_size) #8000
     extractor.set_SearchMethod(kdtree)
     clusters = extractor.Extract()  # array of index-clusters
     

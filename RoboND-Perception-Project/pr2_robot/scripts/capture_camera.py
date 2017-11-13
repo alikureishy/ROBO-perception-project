@@ -47,8 +47,8 @@ if __name__ == '__main__':
     def pcl_callback(pcl_msg):
         global counter
         global illustrator
-        print ("{}: Received capture from topic: {}".format(counter, args.topic))
         if (counter <= args.count):
+            print ("{}: Received capture from topic: {}".format(counter, args.topic))
             folder = os.path.join(args.outfolder, str(counter))
             if not isdir(folder):
                 makedirs(folder)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
                 pcl.save(non_table_cloud, os.path.join(folder, "non-table.pcd"), format="pcd")
 
             # Only if we're doing segmentation:
-            objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, debug=False)
+            objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, cluster_tolerance=0.05, min_size=200, max_size=4000, debug=False)
             if 5 in args.levels:
                 pcl.save(objects_cloud, os.path.join(folder, "objects.pcd"), format="pcd")
 
@@ -116,8 +116,8 @@ if __name__ == '__main__':
                 
             counter += 1
         else:
-            print ("\tSnapshots taken. Skipping.")
-            sys.exit(0)
+            print ("\tSnapshots taken. Shutting down.")
+            rospy.signal_shutdown("Snapshots taken. Shutting down.")
 
     pcl_sub = rospy.Subscriber(args.topic, PointCloud2, pcl_callback, queue_size=1)
 
