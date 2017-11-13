@@ -62,7 +62,7 @@ def pcl_callback(pcl_msg):
 
     image, _ = cleaned, latency = clean(image, mean_k=50, std_dev_mul_thresh=1.0)
 
-    image, _ = sliced1, latency = slice(image, field_name='z', limits=[0.5,1.5])
+    image, _ = sliced1, latency = slice(image, field_name='z', limits=[0.6,1.5])
     image, _ = sliced2, latency = slice(image, field_name='y', limits=[-0.4,0.4])
 
     inliers, latency = segmentize(image, distance_thresh=0.025)
@@ -75,7 +75,7 @@ def pcl_callback(pcl_msg):
 #    ros_downsampled = pcl_to_ros(downsampled)
 #    ros_cleaned = pcl_to_ros(cleaned)
 #    ros_sliced = pcl_to_ros(sliced)
-#    ros_cluster_cloud = pcl_to_ros(cluster_cloud)
+    ros_objects_cloud = pcl_to_ros(objects_cloud)
     ros_cloud_table = pcl_to_ros(table_cloud)
     ros_cloud_objects = pcl_to_ros(non_table_cloud)
     serialization_time = time()
@@ -87,7 +87,7 @@ def pcl_callback(pcl_msg):
 #    pcl_downsampled_pub.publish(ros_downsampled)
 #    pcl_cleaned_pub.publish(ros_cleaned)
 #    pcl_sliced_pub.publish(ros_sliced)
-#    pcl_cluster_pub.publish(ros_cluster_cloud)
+    pcl_cluster_pub.publish(ros_objects_cloud)
     pcl_table_pub.publish(ros_cloud_table)
     pcl_objects_pub.publish(ros_cloud_objects)
     publishing_time = time()
@@ -97,6 +97,8 @@ def pcl_callback(pcl_msg):
     # Exercise-3 TODOs:
     ###################
     detections, markers, object_clouds, latency = classify_objects(clusters, non_table_cloud, classifier, encoder, scaler)
+    assert len(detections) == len(clusters) == len(markers), \
+            "{} clusters were identified, but {} were classified, and {} were marked.".format(len(detections), len(clusters), len(markers))
     print ("\tFound {} objects: {}".format(len(detections), list(map(lambda x: x.label, detections))))
 
     # Publish the list of detected objects

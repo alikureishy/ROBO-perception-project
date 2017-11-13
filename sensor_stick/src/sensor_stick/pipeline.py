@@ -145,7 +145,8 @@ def classify_objects(clusters, cloud, classifier, encoder, scaler, frame=None):
         # For publishing a label into RViz
         label_pos = list(white_cloud[pts_list[0]])
         label_pos[2] += .4
-        object_markers.append(make_label(label,label_pos, index))
+        marker = make_label(label,label_pos, index)
+        object_markers.append(marker)
 
         # Add the detected object to the list of detected objects.
         do = DetectedObject()
