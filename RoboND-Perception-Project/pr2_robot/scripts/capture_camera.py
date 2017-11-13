@@ -33,7 +33,8 @@ if __name__ == '__main__':
     parser.add_argument('-i', dest="infile", required=True, type=str, help='Model file for the object recognition')
     parser.add_argument('-t', dest="topic", required=True, type=str, help="Name of topic to capture. ['/pr2/world/points', ....]")
     parser.add_argument('-c', dest="count", default=0, type=int, help='Number of times to snapshot')
-    parser.add_argument('-l', dest="levels", nargs='*', default=list(range(0,6)), type=int, help='List of stages whose outputs will be saved to disk [0 = Original] [1 = Downsampled] [2 = Cleaned] [3 = Sliced] [4 = Segmented] [5 = Object Cloud] [6 = Detected Objects]')
+    parser.add_argument('-l', dest="levels", nargs='*', default=list(range(0,6)), type=int, \
+        help='List of stages whose outputs will be saved to disk [0 = Original] [1 = Downsampled] [2 = Cleaned] [3 = Sliced] [4 = Segmented] [5 = Object Cloud] [6 = Detected Objects]')
     parser.add_argument('-o', dest='outfolder', required=True, help="Folder where all the pipeline PCDs will be saved")
     parser.add_argument('-p', dest='plot', action="store_true", default = False, help='Whether to plot the feature histograms (default: False)')
     args = parser.parse_args()
@@ -55,7 +56,7 @@ if __name__ == '__main__':
 
             start_time = time()
             
-            pcl_raw = image = ros_to_pcl(pcl_msg)
+            image = ros_to_pcl(pcl_msg)
             print ("\tDeserialization: {} seconds".format(time() - start_time))
             
             # Original

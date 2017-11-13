@@ -3,7 +3,7 @@
 # Import modules
 import numpy as np
 import sklearn
-import time
+from time import time
 import argparse
 from sklearn.preprocessing import LabelEncoder
 import pickle
@@ -50,25 +50,25 @@ def send_to_yaml(yaml_filename, dict_list):
 # Callback function for your Point Cloud Subscriber
 def pcl_callback(pcl_msg):
     print ("Received capture:")
-    start = time.time()
+    start = time()
 
     ###################
     # Exercise-2 TODOs:
     ###################
-    pcl_raw = ros_to_pcl(pcl_msg)
-    print ("\tDeserialization: {} seconds".format(time.time() - start_time))
+    image = ros_to_pcl(pcl_msg)
+    print ("\tDeserialization: {} seconds".format(time() - start))
     
-    downsampled, latency = downsample(pcl_raw, leaf_ratio=0.05)
+    image, _ = downsampled, latency = downsample(image, leaf_ratio=0.003)
 
-    cleaned, latency = clean(downsampled, mean_k=50, std_dev_mul_thresh=1.0)
+    image, _ = cleaned, latency = clean(image, mean_k=50, std_dev_mul_thresh=1.0)
 
-    sliced, latency = slice(cleaned, field_name='z', limits=[0.75,1.1])
+    image, _ = sliced1, latency = slice(image, field_name='z', limits=[0.5,1.5])
+    image, _ = sliced2, latency = slice(image, field_name='y', limits=[-0.4,0.4])
 
-    inliers, latency = segmentize(sliced, distance_thresh=0.02)
+    inliers, latency = segmentize(image, distance_thresh=0.025)
+    table_cloud, non_table_cloud, latency = separate_segments(image, inliers)
 
-    cloud_table, cloud_objects, latency = separate_segments(sliced, inliers)
-
-    cluster_cloud, latency = clusterize_objects(cloud_objects)
+    objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, cluster_tolerance=0.05, min_size=200, max_size=4000, debug=False)
 
 #    # Convert PCL data to ROS messages
 #    ros_raw = pcl_to_ros(pcl_raw)
@@ -76,10 +76,10 @@ def pcl_callback(pcl_msg):
 #    ros_cleaned = pcl_to_ros(cleaned)
 #    ros_sliced = pcl_to_ros(sliced)
 #    ros_cluster_cloud = pcl_to_ros(cluster_cloud)
-    ros_cloud_table = pcl_to_ros(cloud_table)
-    ros_cloud_objects = pcl_to_ros(cloud_objects)
-    serialization_time = time.time()
-    print ("\tSerialization: {} seconds".format(serialization_time - masking_time))
+    ros_cloud_table = pcl_to_ros(table_cloud)
+    ros_cloud_objects = pcl_to_ros(non_table_cloud)
+    serialization_time = time()
+#    print ("\tSerialization: {} seconds".format(serialization_time - masking_time))
 
 #    # Publish ROS messages
 #    pcl_original_pub.publish(pcl_msg)
@@ -90,21 +90,21 @@ def pcl_callback(pcl_msg):
 #    pcl_cluster_pub.publish(ros_cluster_cloud)
     pcl_table_pub.publish(ros_cloud_table)
     pcl_objects_pub.publish(ros_cloud_objects)
-    publishing_time = time.time()
-    print ("\tPublishing: {} seconds. Clusters found: {}".format(publishing_time - serialization_time, len(cluster_indices)))
+    publishing_time = time()
+#    print ("\tPublishing: {} seconds. Clusters found: {}".format(publishing_time - serialization_time, len(cluster_indices)))
 
     ###################
     # Exercise-3 TODOs:
     ###################
-    detected_objects, object_markers, latency = classify_objects(cluster_indices, cloud_objects, object_markers_pub)
-    print("\tDetection: {} seconds. Objects: {}".format(latency, detected_objects))
+    detections, markers, object_clouds, latency = classify_objects(clusters, non_table_cloud, classifier, encoder, scaler)
+    print ("\tFound {} objects: {}".format(len(detections), list(map(lambda x: x.label, detections))))
 
     # Publish the list of detected objects
-    for marker in object_markers:
+    for marker in markers:
         object_markers_pub.publish(marker)
-    detected_objects_pub.publish(detected_objects)
+    detected_objects_pub.publish(detections)
 
-    end = time.time()
+    end = time()
     print ("\tTotal: {} seconds".format(end - start))
 
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
@@ -233,7 +233,7 @@ if __name__ == '__main__':
 
     # TODO: Load Model From disk
     model = pickle.load(open(args.infile, 'rb'))
-    clf = model['classifier']
+    classifier = model['classifier']
     encoder = LabelEncoder()
     encoder.classes_ = model['classes']
     scaler = model['scaler']
