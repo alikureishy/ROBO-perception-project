@@ -88,7 +88,7 @@ if __name__ == '__main__':
                 pcl.save(non_table_cloud, os.path.join(folder, "non-table.pcd"), format="pcd")
 
             # Only if we're doing segmentation:
-            objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, cluster_tolerance=0.05, min_size=200, max_size=4000, debug=False)
+            objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, cluster_tolerance=0.04, min_size=200, max_size=5000, debug=False)
             if 5 in args.levels:
                 pcl.save(objects_cloud, os.path.join(folder, "objects.pcd"), format="pcd")
 

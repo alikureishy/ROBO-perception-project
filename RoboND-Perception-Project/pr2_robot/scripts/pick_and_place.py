@@ -70,7 +70,7 @@ def pcl_callback(pcl_msg):
     inliers, latency = segmentize(image, distance_thresh=0.025)
     table_cloud, non_table_cloud, latency = separate_segments(image, inliers)
 
-    objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, cluster_tolerance=0.05, min_size=200, max_size=4000, debug=False)
+    objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, cluster_tolerance=0.04, min_size=200, max_size=5000, debug=False)
 
 #    # Convert PCL data to ROS messages
 #    ros_raw = pcl_to_ros(pcl_raw)
