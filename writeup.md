@@ -1,7 +1,7 @@
 
 
 ```
-robond@udacity:> ./extract_features.py -i ~/data/library/ -y ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml -c 30 -o ~/data/models/p2_c32_h32_n30.model
+robond@udacity:> ./extract_features.py -i ~/data/library/ -y ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml -c 30 -o ~/data/features/p2_c32_h32_n30.features
 
 Reading object types from: /home/robond/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml
 YAML contained 5 models:
@@ -54,6 +54,6 @@ Total available sample count: 5000
 	27: Processing /home/robond/data/library/glue/pc_glue_344.pcd ...
 	28: Processing /home/robond/data/library/glue/pc_glue_17.pcd ...
 	29: Processing /home/robond/data/library/glue/pc_glue_515.pcd ...
-Storing features in file: /home/robond/data/models/p2_c32_h32_n30.model
+Storing features in file: /home/robond/data/features/p2_c32_h32_n30.features
 Feature extraction complete!
 ```
