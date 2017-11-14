@@ -38,6 +38,37 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
 
+from sklearn.ensemble import ExtraTreesClassifier
+
+def create_classifier():
+    classifier = ExtraTreesClassifier(
+        n_estimators=500
+    )
+#    clf = svm.SVC(kernel='rbf')
+    return classifier    
+    
+def post_process(forest):
+    importances = forest.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in forest.estimators_],
+                 axis=0)
+    indices = np.argsort(importances)[::-1]
+
+    # Print the feature ranking
+    print("Feature ranking:")
+
+    rnge = min(X.shape[1], 30)
+    for f in range(rnge):
+        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+
+#    if args.plot:
+#        # Plot the feature importances of the forest
+#        plt.figure()
+#        plt.title("Feature importances")
+#        plt.bar(x=indices[:rnge], height=importances[indices[:rnge]], color="r", align="center")
+#        plt.xticks(range(rnge), indices[:rnge])
+#        plt.xlim([-1, X.shape[1]])
+#        plt.show()    
+
 if __name__ == "__main__":
     np.random.seed(100)
     
@@ -80,7 +111,7 @@ if __name__ == "__main__":
     X_train = X_scaler.transform(X_train)
 
     # Create classifier
-    clf = svm.SVC(kernel='rbf')
+    clf = create_classifier()
 
     # Set up 5-fold cross-validation
     kf = cross_validation.KFold(len(X_train),
@@ -121,6 +152,9 @@ if __name__ == "__main__":
     print("Accuracy with held-out test-set...")
     y_pred = clf.predict(X_scaler.transform(X_test[0].reshape(1,-1)))
     print ("Prediction: {} / Actual: {}".format(y_pred, y_test[0]))
+
+    # post processing
+    post_process(clf)
 
     # Save classifier to disk
     print("Saving classifier to disk...")

@@ -16,6 +16,7 @@ from sensor_stick.plotter import *
 from sensor_stick.features import get_features
 from sensor_msgs.msg import PointCloud2
 from capture_point_clouds import FileNamer
+from sensor_stick.pipeline import downsample
 
 def pickleloader(filename):
     with open(filename, "rb") as f:
@@ -24,6 +25,10 @@ def pickleloader(filename):
                 yield pickle.load(f)
             except EOFError:
                 break
+
+def preprocess(point_cloud):
+    point_cloud, _ = downsample(point_cloud, leaf_ratio=0.003)
+    return point_cloud
 
 if __name__ == '__main__':
     rospy.init_node("extraction_node")
@@ -66,13 +71,17 @@ if __name__ == '__main__':
             pcfile = filenamer.get_for_idx(r)
             print("\t{}: Processing {} ...".format(j, pcfile))
             point_cloud = pcl.load_XYZRGB(pcfile)
+            
+            # Any pre-processing before feature extraction:
+            point_cloud = preprocess(point_cloud)
+            
             point_cloud_ros = pcl_to_ros(point_cloud)
             features = get_features(point_cloud_ros)
             labeled_features.append([features, model_name])
         
             # Plot
             if args.plot:
-                frame = illustrator.nextframe((i*count) + j)
+                frame = illustrator.nextframe((i*args.count) + j)
                 frame.newsection(model_name)
                 graph = Graph(model_name, list(range(features.size)), features, "Bins", "Normalized Occurrences")
                 frame.add(graph)

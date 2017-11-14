@@ -74,7 +74,7 @@ if __name__ == '__main__':
                 pcl.save(cleaned, os.path.join(folder, "cleaned.pcd"), format="pcd")
 
             # Slicing
-            image, _ = sliced1, latency = slice(image, field_name='z', limits=[0.5,1.5])
+            image, _ = sliced1, latency = slice(image, field_name='z', limits=[0.6,1.5])
             image, _ = sliced2, latency = slice(image, field_name='y', limits=[-0.4,0.4])
             if 3 in args.levels:
                 pcl.save(sliced1, os.path.join(folder, "slice1.pcd"), format="pcd")
