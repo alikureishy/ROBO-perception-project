@@ -43,6 +43,8 @@ def make_yaml_dict(test_scene_num, arm_name, object_name, pick_pose, place_pose)
 
 # Helper function to output to yaml file
 def send_to_yaml(yaml_filename, dict_list):
+#    print("List length: {}".format(len(dict_list)))
+#    print("\tList: {}".format(dict_list))
     data_dict = {"object_list": dict_list}
     with open(yaml_filename, 'w') as outfile:
         yaml.dump(data_dict, outfile, default_flow_style=False)
@@ -112,10 +114,10 @@ def pcl_callback(pcl_msg):
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
     # Could add some logic to determine whether or not your object detections are robust
     # before calling pr2_mover()
-#    try:
-#        pr2_mover(detected_objects)
-#    except rospy.ROSInterruptException:
-#        pass
+    try:
+        pr2_mover(detections)
+    except rospy.ROSInterruptException:
+        pass
 
 class PickPlaceRequest(object):
     def __init__(self):
@@ -159,36 +161,50 @@ def do_pick_and_place(pick_place_request):
 def do_capture_sides():
     pass
 
+import pdb
+        
 # function to load parameters and request PickPlace service
 def pr2_mover(detected_objects):
     # Map: Group -> Dropboxes #
     box_list = rospy.get_param('/dropbox')
+    assert(len(box_list) > 0)
     group_dict = {}
     for box in box_list:
-        group_dict[box.group] = [box.name, box.position]
+        group_dict[box['group']] = [box['name'], box['position']]
 
     # Map: Model -> Centroids #
     centroid_dict = {} # to be lookup of model --> list of tuples (x, y, z)
+    assert(len(detected_objects) > 0)
+    print("Calculating centroids")
     for obj in detected_objects:
         points_arr = ros_to_pcl(obj.cloud).to_array()
-        centroid = np.asscalar(np.mean(points_arr, axis=0)[:3])
-        centroids[obj.label] = centroids.get(obj.label, []).append(centroid)
+        means = np.mean(points_arr, axis=0)
+        centroid = means[:3] # np.asscalar(means[:3])
+        centroid = map(lambda x: float(x), centroid)
+        centroid_dict[obj.label] = centroid_dict.get(obj.label, [])
+        centroid_dict[obj.label].append(centroid)
+        print("\t{}: {}".format(obj.label, centroid))
 
     # Rotate PR2 to capture side-tables for the collision map:
     do_capture_sides()
 
     # List: Yaml detections #
     object_list = rospy.get_param('/object_list')
+    assert (len(object_list) > 0)
     yaml_list = []
     for i, entry in enumerate(object_list):
         model = entry['name']
         group = entry['group']
+        print("{} -> {}:".format(model, group))
         
-        centroids = centroid_dict [model]
+        centroids = centroid_dict.get(model, None)
+        print("\t{} -> {} centroids".format(model, len(centroids) if centroids is not None else None))
         if centroids is not None:
             for centroid in centroids:
+                print("\t\tCentroid: {}".format(centroid))
                 # Get group/box info:
                 box_name, box_position = group_dict[group]
+                print("\t\t\t{} -> {}, {}".format(group, box_name, box_position))
             
                 # Create PickPlace request
                 pick_place_request = PickPlaceRequest()
@@ -202,10 +218,16 @@ def pr2_mover(detected_objects):
                 pick_place_request.place_pose.position.y = box_position[1]
                 pick_place_request.place_pose.position.z = box_position[2]
 
-                yaml_list.append(pick_place_request)
+                yaml_dict = make_yaml_dict(pick_place_request.test_scene_num, \
+                                            pick_place_request.arm_name, \
+                                            pick_place_request.object_name, \
+                                            pick_place_request.pick_pose, \
+                                            pick_place_request.place_pose)
+                yaml_list.append(yaml_dict)
 #                do_pick_and_place(pick_place_request)
 
     # Save all collected pick-place requests into a yaml file:
+#    pdb.set_trace()
     send_to_yaml(args.outfile, yaml_list)
 
 if __name__ == '__main__':
