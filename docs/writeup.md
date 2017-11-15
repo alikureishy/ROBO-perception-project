@@ -19,22 +19,97 @@ This project has 3 parts:
 
 ### Training Pipeline
 
+```
+
+```
+
 ### Perception Pipeline
 
-There are 6 stages to this perception pipeline.
+```
+robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./pick_and_place.py --help
+usage: pick_and_place.py [-h] -i INFILE -t TEST_SCENE -o OUTFILE
+
+Perform advanced pick+place
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -i INFILE      Model file for the object recognition
+  -t TEST_SCENE  Test scene number
+
+```
+
+As an example:
+```
+```
+
+There are 6 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
 
 #### RGB-D Camera View
 
+Attached here is the original point cloud captured from the /prt/world/points topic.
+
 #### Downsampling
+
+This point cloud was massive -- 30+ MB -- which required downsampling because there was unnecessary overhead to the system and no real advantages over a downsampled version of the same.
+
 
 #### Cleaning
 
+The camera captured noisy data, as is obvious in the image in the 'downsampling' section.
+
+#### Passthrough Filter
+
+The next step is to extract only that part of the image that is relevant. For the purposes of this project, a passthrough filter had to be applied two times, as below:
+- 'Z' axis: 
+- 'H' axis: 
+
 #### Segmentation
+
+Now, with the sliced point cloud, the next step is to separate the table from the objects, for which we use RANSAC segmentatlon.
 
 #### Clustering
 
 ### Classification & Labeling
 
+## Debugging
+
+```
+robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./capture_camera.py --help
+usage: capture_camera.py [-h] -i INFILE -t TOPIC [-c COUNT]
+                         [-l [LEVELS [LEVELS ...]]] -o OUTFOLDER [-p]
+
+Perform advanced pick+place
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INFILE             Model file for the object recognition
+  -t TOPIC              Name of topic to capture. ['/pr2/world/points', ....]
+  -c COUNT              Number of times to snapshot
+  -l [LEVELS [LEVELS ...]]
+                        List of stages whose outputs will be saved to disk [0
+                        = Original] [1 = Downsampled] [2 = Cleaned] [3 =
+                        Sliced] [4 = Segmented] [5 = Object Cloud] [6 =
+                        Detected Objects]
+  -o OUTFOLDER          Folder where all the pipeline PCDs will be saved
+  -p                    Whether to plot the feature histograms (default:
+                        False)
+```
+
+As an example:
+
+```
+```
+
+## Conclusions
+
+Few things I learned from this exercise are:
+- That the resolution of the point clouds used for training the classifier had to match (at least to some extent) the resolution of the deployment point clouds. So, the voxel downsampling that I was performing at the start of the perception pipeline (prior to cleaning, segmentation, feature extraction etc) had to also be applied to the training point clouds, prior to feature extraction. Keeping these consistent really improved the accuracy of the classifier.
+- I had to switch to the _ExtraTreesClassifier_ for best results.
+- In general, I only had to use between 10-50 samples for each object type, during training. There was no need to train with more data.
+- I found that a combination of 3 types of features would be ideal for this classification:
+-- RGB histogram: This is because color is an important component of identification (though not the only one)
+-- HSV histogram: This is essential in the case where there are shadows and other lighting variation between the training and deployment captures.
+-- Normals histogram: This captures the shape of the object, which is clearly crucial in determining any type of object.
 
 ```
 robond@udacity:> ./extract_features.py -i ~/data/library/ -y ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml -c 30 -o ~/data/features/p2_c32_h32_n30.features
