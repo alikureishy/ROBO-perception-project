@@ -7,25 +7,25 @@
 
 - [Overview](#overview)
 - [Components](#components)
-    - [Simulation Environment](#simulation-environment)
-    - [Training Pipeline](#training-pipeline)
-        - [Sample Collection](#sample-collection)
-	- [Feature Extraction](#feature-extraction)
-	- [Training](#training)
-    - [Perception Pipeline](#perception-pipeline)
-        - [RGBD Camera View](#rgbd-camera-view)
-	- [Downsampling](#downsampling)
-	- [Cleaning](#cleaning)
-	- [Passthrough Filter](#passthrough-filter)
-	- [Segmentation](#segmentation)
-	- [Clustering](#clustering)
-	- [Classification](#classification)
-	- [Labeling](#labeling)
+	- [Simulation Environment](#simulation-environment)
+	- [Training Pipeline](#training-pipeline)
+		- [Sample Collection](#sample-collection)
+		- [Feature Extraction](#feature-extraction)
+		- [Training](#training)
+	- [Perception Pipeline](#perception-pipeline)
+		- [RGBD Camera View](#rgbd-camera-view)
+		- [Downsampling](#downsampling)
+		- [Cleaning](#cleaning)
+		- [Passthrough Filter](#passthrough-filter)
+		- [Segmentation](#segmentation)
+		- [Clustering](#clustering)
+		- [Classification](#classification)
+		- [Labeling](#labeling)
 - [Debugging](#debugging)
 - [Results](#results)
-    - [World 1](#world-1)
-    - [World 2](#world-2)
-    - [World 3](#world-3)
+	- [World 1](#world-1)
+	- [World 2](#world-2)
+	- [World 3](#world-3)
 - [Conclusions](#conclusions)
 
 ## Overview
@@ -79,7 +79,7 @@ drwxrwxr-x  2 robond robond   49152 Nov 10 12:39 sticky_notes
 
 The tool to capture these samples was:
 ```
-robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./capture_point_clouds.py --help
+$> ./capture_point_clouds.py --help
 usage: capture_point_clouds.py [-h] -y YAML -c COUNT -o OUTFOLDER [-t TOPIC]
 
 Capture point clouds for feature extraction
@@ -106,7 +106,7 @@ The final feature array for each point cloud, therefore, would contain 32 * 9 = 
 
 Feature extraction is triggered using this utility:
 ```
-robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./extract_features.py --help
+$> ./extract_features.py --help
 usage: extract_features.py [-h] -i INFOLDER -y YAML -c COUNT -o OUTFILE [-p]
 
 Capture point clouds for feature extraction
@@ -124,7 +124,7 @@ optional arguments:
 
 As an example:
 ```
-robond@udacity:> ./extract_features.py -i ~/data/library/ -y ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml -c 30 -o ~/data/features/p2_c32_h32_n30.features
+$> ./extract_features.py -i ~/data/library/ -y ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml -c 30 -o ~/data/features/p2_c32_h32_n30.features
 
 Reading object types from: /home/robond/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml
 YAML contained 5 models:
@@ -166,7 +166,7 @@ Feature extraction complete!
 Finally, the extracted features from above could be independently trained on, using various types of classifiers. This was the advantage of separating the training pipeline into these stages. Once the features were generated for all the samples for a given world, I just had to tweak the classifier hyperparams to see which one performed best, without having to alter any of the previous stage outputs.
 
 ```
-robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./train_svm.py --help
+$> ./train_svm.py --help
 usage: train_svm.py [-h] -i INFILE -o OUTFILE [-p]
 
 Capture point clouds for feature extraction
@@ -184,7 +184,7 @@ Note: See the Results section for the confusion matrices obtained for the 3 diff
 ### Perception Pipeline
 
 ```
-robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./pick_and_place.py --help
+$> ./pick_and_place.py --help
 usage: pick_and_place.py [-h] -i INFILE -t TEST_SCENE -o OUTFILE
 
 Perform advanced pick+place
@@ -198,6 +198,51 @@ optional arguments:
 
 As an example:
 ```
+$> ./train_svm.py -i ~/data/features/p3_d0_003_c32_h32_n32_c50.features -o ~/data/models/p3_etc_d0_003_c32_h32_n32_c50.model -p
+Loading training set...
+Features in Training Set: 400
+Invalid Features in Training set: 0
+Splitting train/test data..
+Scaling feature columns...
+Performing cross validation on classifier
+Scores: [ 1.          0.975       0.975       0.975       0.97468354]
+Accuracy: 0.98 (+/- 0.02)
+accuracy score: 0.977443609023
+Training the classifier...
+Accuracy with held-out test-set...
+Prediction: [4] / Actual: 4
+Feature ranking:
+	1. feature 102 (0.028090)
+	2. feature 155 (0.025194)
+	3. feature 100 (0.023304)
+	4. feature 101 (0.022612)
+	5. feature 32 (0.022203)
+	6. feature 127 (0.022073)
+	7. feature 150 (0.019617)
+	8. feature 116 (0.018971)
+	9. feature 159 (0.017219)
+	10. feature 158 (0.016200)
+	11. feature 115 (0.015090)
+	12. feature 109 (0.014815)
+	13. feature 156 (0.014782)
+	14. feature 157 (0.014092)
+	15. feature 137 (0.013967)
+	16. feature 64 (0.013903)
+	17. feature 138 (0.013400)
+	18. feature 98 (0.013236)
+	19. feature 99 (0.012634)
+	20. feature 33 (0.011953)
+	21. feature 153 (0.011354)
+	22. feature 128 (0.010987)
+	23. feature 154 (0.010794)
+	24. feature 147 (0.010639)
+	25. feature 126 (0.010471)
+	26. feature 114 (0.010303)
+	27. feature 96 (0.010085)
+	28. feature 66 (0.009864)
+	29. feature 65 (0.009289)
+	30. feature 136 (0.009167)
+Saving classifier to disk...
 ```
 
 The different pipeline stages below are implemented here. The overall pipeline is implemented here.
@@ -312,7 +357,7 @@ So, I wrote a tool -- _capture_camera.py_ -- that would essentially output the f
 The tool's help menu is below, as an illustration:
 
 ```
-robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./capture_camera.py --help
+$> ./capture_camera.py --help
 usage: capture_camera.py [-h] -i INFILE -t TOPIC [-c COUNT]
                          [-l [LEVELS [LEVELS ...]]] -o OUTFOLDER [-p]
 
@@ -333,9 +378,23 @@ optional arguments:
                         False)
 ```
 
-As an example:
-
+On running this utility, the OUTFOLDER path will have a folder hierarchy as follows:
 ```
+<OUTFOLDER>
+	\<1>				--> <Frame#>
+		\0_<object>.pcd		--> Indexed list of recognized object point clouds (e.g, 0_biscuits.pcd)
+		\1_<object>.pcd
+		...
+		\original.pcd		--> Original point cloud (received from the topic)
+		\downsampled		--> Downsampled point cloud
+		\cleaned.pcd		--> Cleaned point cloud
+		\slice1.pcd		--> Point cloud after the vertical slicing ('Z' axis)
+		\slice2.pcd		--> Point cloud after the horizontal slicing ('X' axis)
+		\table.pcd		--> Segmented point cloud of the table
+		\non-table.pcd		--> Segmented point cloud of everything else (except the table)
+		\objects.pcd		--> Color-coded view of the clustered objects from non-table.pcd
+	\<2>
+		...
 ```
 
 ## Results
