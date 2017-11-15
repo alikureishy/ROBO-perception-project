@@ -77,7 +77,7 @@ drwxrwxr-x  2 robond robond   36864 Nov 11 09:28 soda_can
 drwxrwxr-x  2 robond robond   49152 Nov 10 12:39 sticky_notes
 ```
 
-The tool to capture these samples was:
+The [tool](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/scripts/capture_point_clouds.py) to capture these samples was:
 ```
 $> ./capture_point_clouds.py --help
 usage: capture_point_clouds.py [-h] -y YAML -c COUNT -o OUTFOLDER [-t TOPIC]
@@ -104,7 +104,7 @@ The next stage was feature extraction, which involved the following pipeline for
 The final feature array for each point cloud, therefore, would contain 32 * 9 = 288 floats, as depicted in this image here:
 ![Histogram](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/histogram_example.png)
 
-Feature extraction is triggered using this utility:
+Feature extraction is triggered using this [tool](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/scripts/extract_features.py):
 ```
 $> ./extract_features.py --help
 usage: extract_features.py [-h] -i INFOLDER -y YAML -c COUNT -o OUTFILE [-p]
@@ -164,6 +164,8 @@ Feature extraction complete!
 #### Training
 
 Finally, the extracted features from above could be independently trained on, using various types of classifiers. This was the advantage of separating the training pipeline into these stages. Once the features were generated for all the samples for a given world, I just had to tweak the classifier hyperparams to see which one performed best, without having to alter any of the previous stage outputs.
+
+Here is the [tool](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/scripts/train_svm.py) for training the SVM from the features extracted above.
 
 ```
 $> ./train_svm.py --help
@@ -245,7 +247,7 @@ Feature ranking:
 Saving classifier to disk...
 ```
 
-The different pipeline stages below are implemented here. The overall pipeline is implemented here.
+The different pipeline stages below are implemented [here](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/src/sensor_stick/pipeline.py). The script to do the pick+place operation using this pipeline, is [here]()
 
 There are 6 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
 
@@ -299,7 +301,7 @@ The coloring indicates the unique clusters that had been discovered -- since eac
 
 #### Classification
 
-This involved reading the model from the provided model file, obtaining the classifier, the label encoder, and the scaler, all of which are needed for proper classification. The points for each clustered object above were then used to extract the point cloud of the actual object, from the segmented point cloud, to obtain the individual objects' point clouds, as shown here:
+This involved reading the model from the provided model file, obtaining the classifier, the label encoder, and the scaler, all of which are needed for proper classification. The points for each clustered object above were then used to extract the point cloud of the actual object, using the shared feature-extraction method(s) available [here](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/src/sensor_stick/features.py), from the segmented point cloud, to obtain the individual objects' point clouds, as shown here:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/object_list.png)
 
