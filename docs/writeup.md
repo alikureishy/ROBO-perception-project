@@ -1,5 +1,5 @@
 
-![PR2 Perception Project](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_scene.png)
+![Overview](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_scene.png)
 
 # Robotics - Perception Pipeline
 
@@ -18,11 +18,41 @@ This project has 3 parts:
 
 ### Simulation Environment
 
+This project was run on the ROS platform, and ran the simulation using Gazebo.
+
+![Gazebo](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/simulation_gazebo.png)
 
 ### Training Pipeline
 
+Traning involves collecting samples, extracting features, and then training a classifier on those features. For efficiency, it seemed best to separate these 3 pipeline stages into separate tools.
+
 #### Sample Collection
 
+This would issue gazebo requests to sample each of the objects in a certain number of random orientations and positions, in order to take a snapshot to use as the reference point cloud for that object type. I created a library of a 1000 such reference point clouds for each of the 15 objects covered in this project:
+
+```
+robond@udacity:~/data/library$ ls -al
+total 10324
+drwxrwxr-x 17 robond robond    4096 Nov 11 21:15 .
+drwxr-xr-x  7 robond robond    4096 Nov 14 13:36 ..
+drwxrwxr-x  2 robond robond   36864 Nov 10 02:37 beer
+drwxrwxr-x  2 robond robond   36864 Nov 10 13:12 biscuits
+drwxrwxr-x  2 robond robond   36864 Nov 10 12:50 book
+drwxrwxr-x  2 robond robond   36864 Nov 10 02:50 bowl
+drwxrwxr-x  2 robond robond   36864 Nov 10 03:04 create
+drwxrwxr-x  2 robond robond   36864 Nov 10 03:16 disk_part
+drwxrwxr-x  2 robond robond   45056 Nov 10 13:21 eraser
+drwxrwxr-x  2 robond robond   36864 Nov 10 13:44 glue
+drwxrwxr-x  2 robond robond   36864 Nov 10 03:26 hammer
+drwxrwxr-x  2 robond robond   57344 Nov 10 03:34 plastic_cup
+drwxrwxr-x  2 robond robond   36864 Nov 10 13:00 snacks
+drwxrwxr-x  2 robond robond   36864 Nov 10 13:37 soap
+drwxrwxr-x  2 robond robond   36864 Nov 10 13:29 soap2
+drwxrwxr-x  2 robond robond   36864 Nov 11 09:28 soda_can
+drwxrwxr-x  2 robond robond   49152 Nov 10 12:39 sticky_notes
+```
+
+The tool to capture these samples was:
 ```
 robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./capture_point_clouds.py --help
 usage: capture_point_clouds.py [-h] -y YAML -c COUNT -o OUTFOLDER [-t TOPIC]
@@ -37,9 +67,40 @@ optional arguments:
   -t TOPIC      Topic to which to publish the sampled point clouds
 ```
 
+Each captured sample would be added to a folder corresponding to the object type.
 
 #### Feature Extraction
 
+The next stage was feature extraction, which involved the following pipeline for each point cloud:
+- Downsampling
+- Extract:
+-- Histogram of 32 bins for each of the R, G and B channels
+-- Histogram of 32 bins for each of the H, S and V channels
+-- Histogram of 32 bins for the surface normals for the X, Y and Z axes
+
+The final feature array for each point cloud, therefore, would contain 32 * 9 = 288 floats, as depicted in this image here:
+![Histogram](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/histogram.png)
+
+
+Feature extraction is triggered using this utility:
+```
+robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./extract_features.py --help
+usage: extract_features.py [-h] -i INFOLDER -y YAML -c COUNT -o OUTFILE [-p]
+
+Capture point clouds for feature extraction
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -i INFOLDER  Root folder containing model-based sub-folders of point cloud
+               samples
+  -y YAML      YAML file with model names
+  -c COUNT     Num of variations of each model to process (default: 10)
+  -o OUTFILE   Pickle file to save extracted features
+  -p           Whether to plot the feature histograms (default: False)
+
+```
+
+As an example:
 ```
 robond@udacity:> ./extract_features.py -i ~/data/library/ -y ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml -c 30 -o ~/data/features/p2_c32_h32_n30.features
 
@@ -56,49 +117,31 @@ Calculating sample availability:
 Total available sample count: 5000
 0: Model: biscuits. Avaiable samples 1000. Selecting 30...
 	0: Processing /home/robond/data/library/biscuits/pc_biscuits_812.pcd ...
-	1: Processing /home/robond/data/library/biscuits/pc_biscuits_198.pcd ...
-	2: Processing /home/robond/data/library/biscuits/pc_biscuits_861.pcd ...
   ...
-  27: Processing /home/robond/data/library/biscuits/pc_biscuits_259.pcd ...
-	28: Processing /home/robond/data/library/biscuits/pc_biscuits_467.pcd ...
 	29: Processing /home/robond/data/library/biscuits/pc_biscuits_738.pcd ...
 1: Model: soap. Avaiable samples 1000. Selecting 30...
 	0: Processing /home/robond/data/library/soap/pc_soap_396.pcd ...
-	1: Processing /home/robond/data/library/soap/pc_soap_705.pcd ...
-	2: Processing /home/robond/data/library/soap/pc_soap_749.pcd ...
   ...
-  27: Processing /home/robond/data/library/soap/pc_soap_143.pcd ...
-	28: Processing /home/robond/data/library/soap/pc_soap_317.pcd ...
 	29: Processing /home/robond/data/library/soap/pc_soap_248.pcd ...
 2: Model: book. Avaiable samples 1000. Selecting 30...
 	0: Processing /home/robond/data/library/book/pc_book_151.pcd ...
-	1: Processing /home/robond/data/library/book/pc_book_499.pcd ...
-	2: Processing /home/robond/data/library/book/pc_book_2.pcd ...
   ...
-	27: Processing /home/robond/data/library/book/pc_book_86.pcd ...
-	28: Processing /home/robond/data/library/book/pc_book_990.pcd ...
 	29: Processing /home/robond/data/library/book/pc_book_1.pcd ...
 3: Model: soap2. Avaiable samples 1000. Selecting 30...
 	0: Processing /home/robond/data/library/soap2/pc_soap2_14.pcd ...
-	1: Processing /home/robond/data/library/soap2/pc_soap2_269.pcd ...
-	2: Processing /home/robond/data/library/soap2/pc_soap2_222.pcd ...
   ...
-	27: Processing /home/robond/data/library/soap2/pc_soap2_250.pcd ...
-	28: Processing /home/robond/data/library/soap2/pc_soap2_761.pcd ...
 	29: Processing /home/robond/data/library/soap2/pc_soap2_465.pcd ...
 4: Model: glue. Avaiable samples 1000. Selecting 30...
 	0: Processing /home/robond/data/library/glue/pc_glue_492.pcd ...
-	1: Processing /home/robond/data/library/glue/pc_glue_509.pcd ...
-	2: Processing /home/robond/data/library/glue/pc_glue_974.pcd ...
   ...
-	27: Processing /home/robond/data/library/glue/pc_glue_344.pcd ...
-	28: Processing /home/robond/data/library/glue/pc_glue_17.pcd ...
 	29: Processing /home/robond/data/library/glue/pc_glue_515.pcd ...
 Storing features in file: /home/robond/data/features/p2_c32_h32_n30.features
 Feature extraction complete!
 ```
 
 #### Training
+
+Finally, the extracted features from above could be independently trained on, using various types of classifiers. This was the advantage of separating the training pipeline into these stages. Once the features were generated for all the samples for a given world, I just had to tweak the classifier hyperparams to see which one performed best, without having to alter any of the previous stage outputs.
 
 ```
 robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./train_svm.py --help
@@ -113,6 +156,8 @@ optional arguments:
   -p          Whether to plot the confusion matrix (default: False)
 
 ```
+
+Note: See the Results section for the confusion matrices obtained for the 3 different worlds.
 
 ### Perception Pipeline
 
@@ -183,11 +228,45 @@ This pipeline uses Euclidian Distance clustering, and produces the following obj
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/object_list.png)
 
-### Classification & Labeling
-
 #### Classification
 
 This involved reading the model from the provided model file, obtaining the classifier, the label encoder, and the scaler, all of which are needed for proper classification.
+
+Then, the same features would be extracted for the clustered objects above, as was done for the training samples, to generate a 288-bin histogram, which was then used in the classification, to obtain the corresponding label.
+
+Each detected object's centroid was also determined, using the cluster points associated with it, across the x, y and z axes.
+
+#### Labeling
+
+With the labels and centroids known, the configuration file (referenced by the -y parameter in the pick_and_place.py tool above) was referenced to collect the group associated with each label. This group was then used to lookup the corresponding bucket/arm combination that had to pick+place it, and a corresponding list of handling instructions were generated as yaml, as pictured (for example) below:
+
+```
+object_list:
+- arm_name: left
+  object_name: sticky_notes
+  pick_pose:
+    orientation:
+      w: 0
+      x: 0
+      y: 0
+      z: 0
+    position:
+      x: 0.43974432349205017
+      y: 0.21434171497821808
+      z: 0.6919182538986206
+  place_pose:
+    orientation:
+      w: 0
+      x: 0
+      y: 0
+      z: 0
+    position:
+      x: 0
+      y: 0.71
+      z: 0.605
+  test_scene_num: 3
+```
+
 
 ## Debugging
 
@@ -263,6 +342,7 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p1_labeled.png)
 
+See generated pick+place 'commands' file here.
 
 ### World 2
 
@@ -293,6 +373,8 @@ Training parameters:
 #### Labeled Output
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p2_labeled.png)
+
+See generated pick+place 'commands' file here.
 
 ### World 3
 
@@ -330,6 +412,8 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_labeled.png)
 
+See generated pick+place 'commands' file here.
+
 ## Conclusions
 
 Few things I learned from this exercise are:
@@ -341,191 +425,3 @@ Few things I learned from this exercise are:
 -- HSV histogram: This is essential in the case where there are shadows and other lighting variation between the training and deployment captures.
 -- Normals histogram: This captures the shape of the object, which is clearly crucial in determining any type of object.
 
-
-```
-object_list:
-- arm_name: left
-  object_name: sticky_notes
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.43974432349205017
-      y: 0.21434171497821808
-      z: 0.6919182538986206
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: 0.71
-      z: 0.605
-  test_scene_num: 3
-- arm_name: left
-  object_name: book
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.49164295196533203
-      y: 0.08344084769487381
-      z: 0.7354593276977539
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: 0.71
-      z: 0.605
-  test_scene_num: 3
-- arm_name: right
-  object_name: snacks
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.4238100051879883
-      y: -0.32212504744529724
-      z: 0.7633553147315979
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: -0.71
-      z: 0.605
-  test_scene_num: 3
-- arm_name: right
-  object_name: biscuits
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.5885060429573059
-      y: -0.21873414516448975
-      z: 0.7125846147537231
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: -0.71
-      z: 0.605
-  test_scene_num: 3
-- arm_name: left
-  object_name: eraser
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.6121700406074524
-      y: 0.28314337134361267
-      z: 0.6523650884628296
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: 0.71
-      z: 0.605
-  test_scene_num: 3
-- arm_name: right
-  object_name: soap2
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.4536884129047394
-      y: -0.04403987526893616
-      z: 0.683113157749176
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: -0.71
-      z: 0.605
-  test_scene_num: 3
-- arm_name: right
-  object_name: soap
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.6805647015571594
-      y: 0.0030703614465892315
-      z: 0.6835725903511047
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: -0.71
-      z: 0.605
-  test_scene_num: 3
-- arm_name: left
-  object_name: glue
-  pick_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0.6127251982688904
-      y: 0.13942934572696686
-      z: 0.6910355687141418
-  place_pose:
-    orientation:
-      w: 0
-      x: 0
-      y: 0
-      z: 0
-    position:
-      x: 0
-      y: 0.71
-      z: 0.605
-  test_scene_num: 3
-```
