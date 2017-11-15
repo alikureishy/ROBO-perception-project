@@ -1,4 +1,5 @@
 
+![PR2 Perception Project](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_scene.png)
 
 # Robotics - Perception Pipeline
 
@@ -16,6 +17,7 @@ This project has 3 parts:
 - The perception pipeline
 
 ### Simulation Environment
+
 
 ### Training Pipeline
 
@@ -48,6 +50,8 @@ There are 6 stages to this perception pipeline, discussed below, with illustrati
 
 Attached here is the original point cloud captured from the /prt/world/points topic.
 
+![PR2 Camera View](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_camera_view.png)
+
 #### Downsampling
 
 This point cloud was massive -- 30+ MB -- which required downsampling because there was unnecessary overhead to the system and no real advantages over a downsampled version of the same.
@@ -62,6 +66,8 @@ The camera captured noisy data, as is obvious in the image in the 'downsampling'
 The next step is to extract only that part of the image that is relevant. For the purposes of this project, a passthrough filter had to be applied two times, as below:
 - 'Z' axis: 
 - 'H' axis: 
+
+
 
 #### Segmentation
 
