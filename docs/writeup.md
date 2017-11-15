@@ -98,8 +98,11 @@ The next stage was feature extraction, which involved the following pipeline for
 - Downsampling
 - Extract (and concatenate together):
 	- Histogram of 32 bins for each of the R, G and B channels
+		- This is because color is an important component of identification (though not the only one)
 	- Histogram of 32 bins for each of the H, S and V channels
+		- This is essential in the case where there are shadows and other lighting variation between the training and deployment captures.
 	- Histogram of 32 bins for the surface normals for the X, Y and Z axes
+		- This captures the shape of the object, which is clearly crucial in determining any type of object.
 
 The final feature array for each point cloud, therefore, would contain 32 * 9 = 288 floats, as depicted in this image here:
 ![Histogram](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/histogram_example.png)
@@ -553,8 +556,3 @@ Few things I learned from this exercise are:
 - That the resolution of the point clouds used for training the classifier had to match (at least to some extent) the resolution of the deployment point clouds. So, the voxel downsampling that I was performing at the start of the perception pipeline (prior to cleaning, segmentation, feature extraction etc) had to also be applied to the training point clouds, prior to feature extraction. Keeping these consistent really improved the accuracy of the classifier.
 - I had to switch to the _ExtraTreesClassifier_ for best results.
 - In general, I only had to use between 10-50 samples for each object type, during training. There was no need to train with more data.
-- I found that a combination of 3 types of features would be ideal for this classification:
--- RGB histogram: This is because color is an important component of identification (though not the only one)
--- HSV histogram: This is essential in the case where there are shadows and other lighting variation between the training and deployment captures.
--- Normals histogram: This captures the shape of the object, which is clearly crucial in determining any type of object.
-
