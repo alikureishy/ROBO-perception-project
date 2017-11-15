@@ -316,7 +316,7 @@ Each detected object's centroid was also determined, using the cluster points as
 
 #### Labeling
 
-With the labels and centroids known, the configuration file (referenced by the -y parameter in the pick_and_place.py tool above) was referenced to collect the group associated with each label. This group was then used to lookup the corresponding bucket/arm combination that had to pick+place it, and a corresponding list of handling instructions were generated as yaml, as pictured (for example) below:
+With the labels and centroids known, the pickable-object list (ROS config param: '/object_list') was looked up to collect the group associated with each label. This group was then used to lookup the corresponding bucket/arm combination (ROS config param: '/dropbox') for where the bucket into which it had to be placed, and a corresponding list of handling instructions were generated as yaml, as pictured (for example) below:
 
 ```
 object_list:
@@ -344,6 +344,8 @@ object_list:
       z: 0.605
   test_scene_num: 3
 ```
+
+Another list of detected objects (containing the label) was published to the '/detected_objects' ROS topic, so that it could be displayed on RViz using the 'Marker' Visualizer there.
 
 
 ## Debugging
