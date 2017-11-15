@@ -442,6 +442,8 @@ I was able to achieve 100% accuracy of detection, for all 3 worlds, as illustrat
 
 ### World 1
 
+Accuracy: 100% (3/3 objects labeled correctly)
+
 This world had only 3 objects:
 ```
 object_list:
@@ -473,6 +475,8 @@ See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-
 Debug point clouds [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p1).
 
 ### World 2
+
+Accuracy: 100% (5/5 objects labeled correctly)
 
 This world had 5 objects:
 ```
@@ -509,6 +513,8 @@ See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-
 Debug point clouds [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p2).
 
 ### World 3
+
+Accuracy: 100% (8/8 objects labeled correctly)
 
 This world had 8 objects:
 ```
