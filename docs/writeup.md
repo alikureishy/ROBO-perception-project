@@ -436,9 +436,11 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p1_labeled.png)
 
-#### Generated YAML Instructions
+#### Generated YAML Instructions & Other Debug Info
 
 See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-perception-project/blob/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p1/p1_commands.yaml).
+
+Debug point clouds [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p1).
 
 ### World 2
 
@@ -470,9 +472,11 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p2_labeled.png)
 
-#### Generated YAML Instructions
+#### Generated YAML Instructions & Other Debug Info
 
 See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-perception-project/blob/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p2/p2_commands.yaml).
+
+Debug point clouds [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p2).
 
 ### World 3
 
@@ -510,9 +514,11 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_labeled.png)
 
-#### Generated YAML Instructions
+#### Generated YAML Instructions & Other Debug Info
 
 See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-perception-project/blob/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p3/p3_commands.yaml).
+
+Debug point clouds [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p3).
 
 ## Conclusions
 
