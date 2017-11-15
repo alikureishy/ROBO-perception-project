@@ -385,7 +385,24 @@ optional arguments:
                         False)
 ```
 
-On running this utility, the OUTFOLDER path will have a folder hierarchy as follows:
+Here's a sample output from this utility:
+```
+$> ./capture_camera.py -i ~/data/models/p1_etc_d0_003_c32_h32_n32_c20.model -t /pr2/world/points -c 1 -l 0 1 2 3 4 5 6 -o ./p1
+Namespace(count=3, infile='/home/robond/data/models/p1_etc_d0_003_c32_h32_n32_c20.model', levels=[0, 1, 2, 3, 4, 5, 6], outfolder='./p1', plot=False, topic='/pr2/world/points')
+1: Received capture from topic: /pr2/world/points
+	Deserialization: 2.94999313354 seconds
+	Downsampling: 0.259364843369 seconds
+	Cleaning: 4.6358230114 seconds
+	Passthrough: 0.00532102584839 seconds
+	Passthrough: 0.000747919082642 seconds
+	Ransac: 0.0131590366364 seconds
+	Extraction: 0.00392293930054 seconds
+	Clusterizing: 0.170705795288 seconds
+	Classification: 2.14816594124 seconds
+	Found 3 objects: ['biscuits', 'soap', 'soap2']
+```
+
+The OUTFOLDER path will then contain a folder hierarchy containing debug point-clouds as below:
 ```
 <OUTFOLDER>
 	\<1>				--> <Frame#>
@@ -401,6 +418,8 @@ On running this utility, the OUTFOLDER path will have a folder hierarchy as foll
 		\non-table.pcd		--> Segmented point cloud of everything else (except the table)
 		\objects.pcd		--> Color-coded view of the clustered objects from non-table.pcd
 	\<2>
+		...
+	\<3>
 		...
 ```
 
