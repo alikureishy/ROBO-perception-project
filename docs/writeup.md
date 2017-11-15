@@ -21,101 +21,24 @@ This project has 3 parts:
 
 ### Training Pipeline
 
-```
+#### Sample Collection
 
 ```
+robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./capture_point_clouds.py --help
+usage: capture_point_clouds.py [-h] -y YAML -c COUNT -o OUTFOLDER [-t TOPIC]
 
-### Perception Pipeline
-
-```
-robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./pick_and_place.py --help
-usage: pick_and_place.py [-h] -i INFILE -t TEST_SCENE -o OUTFILE
-
-Perform advanced pick+place
+Capture point clouds for feature extraction
 
 optional arguments:
-  -h, --help     show this help message and exit
-  -i INFILE      Model file for the object recognition
-  -t TEST_SCENE  Test scene number
-
+  -h, --help    show this help message and exit
+  -y YAML       YAML file with model names
+  -c COUNT      Num of variations (default: 10)
+  -o OUTFOLDER  Folder to save .pcd files for point cloud samples
+  -t TOPIC      Topic to which to publish the sampled point clouds
 ```
 
-As an example:
-```
-```
 
-There are 6 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
-
-#### RGB-D Camera View
-
-Attached here is the original point cloud captured from the /prt/world/points topic.
-
-![PR2 Camera View](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_camera_view.png)
-
-#### Downsampling
-
-This point cloud was massive -- 30+ MB -- which required downsampling because there was unnecessary overhead to the system and no real advantages over a downsampled version of the same.
-
-
-#### Cleaning
-
-The camera captured noisy data, as is obvious in the image in the 'downsampling' section.
-
-#### Passthrough Filter
-
-The next step is to extract only that part of the image that is relevant. For the purposes of this project, a passthrough filter had to be applied two times, as below:
-- 'Z' axis: 
-- 'H' axis: 
-
-
-
-#### Segmentation
-
-Now, with the sliced point cloud, the next step is to separate the table from the objects, for which we use RANSAC segmentatlon.
-
-#### Clustering
-
-### Classification & Labeling
-
-## Debugging
-
-```
-robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./capture_camera.py --help
-usage: capture_camera.py [-h] -i INFILE -t TOPIC [-c COUNT]
-                         [-l [LEVELS [LEVELS ...]]] -o OUTFOLDER [-p]
-
-Perform advanced pick+place
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -i INFILE             Model file for the object recognition
-  -t TOPIC              Name of topic to capture. ['/pr2/world/points', ....]
-  -c COUNT              Number of times to snapshot
-  -l [LEVELS [LEVELS ...]]
-                        List of stages whose outputs will be saved to disk [0
-                        = Original] [1 = Downsampled] [2 = Cleaned] [3 =
-                        Sliced] [4 = Segmented] [5 = Object Cloud] [6 =
-                        Detected Objects]
-  -o OUTFOLDER          Folder where all the pipeline PCDs will be saved
-  -p                    Whether to plot the feature histograms (default:
-                        False)
-```
-
-As an example:
-
-```
-```
-
-## Conclusions
-
-Few things I learned from this exercise are:
-- That the resolution of the point clouds used for training the classifier had to match (at least to some extent) the resolution of the deployment point clouds. So, the voxel downsampling that I was performing at the start of the perception pipeline (prior to cleaning, segmentation, feature extraction etc) had to also be applied to the training point clouds, prior to feature extraction. Keeping these consistent really improved the accuracy of the classifier.
-- I had to switch to the _ExtraTreesClassifier_ for best results.
-- In general, I only had to use between 10-50 samples for each object type, during training. There was no need to train with more data.
-- I found that a combination of 3 types of features would be ideal for this classification:
--- RGB histogram: This is because color is an important component of identification (though not the only one)
--- HSV histogram: This is essential in the case where there are shadows and other lighting variation between the training and deployment captures.
--- Normals histogram: This captures the shape of the object, which is clearly crucial in determining any type of object.
+#### Feature Extraction
 
 ```
 robond@udacity:> ./extract_features.py -i ~/data/library/ -y ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/config/pick_list_2.yaml -c 30 -o ~/data/features/p2_c32_h32_n30.features
@@ -174,6 +97,250 @@ Total available sample count: 5000
 Storing features in file: /home/robond/data/features/p2_c32_h32_n30.features
 Feature extraction complete!
 ```
+
+#### Training
+
+```
+robond@udacity:~/catkin_ws/src/sensor_stick/scripts$ ./train_svm.py --help
+usage: train_svm.py [-h] -i INFILE -o OUTFILE [-p]
+
+Capture point clouds for feature extraction
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -i INFILE   Pickle file with point cloud features
+  -o OUTFILE  File to store the model into
+  -p          Whether to plot the confusion matrix (default: False)
+
+```
+
+### Perception Pipeline
+
+```
+robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./pick_and_place.py --help
+usage: pick_and_place.py [-h] -i INFILE -t TEST_SCENE -o OUTFILE
+
+Perform advanced pick+place
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -i INFILE      Model file for the object recognition
+  -t TEST_SCENE  Test scene number
+  -o OUTFILE     YAML file to save the generated pick+place request sequence
+```
+
+As an example:
+```
+```
+
+The different pipeline stages below are implemented here. The overall pipeline is implemented here.
+
+There are 6 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
+
+#### RGB-D Camera View
+
+Attached here is the original point cloud captured from the /prt/world/points topic.
+
+![PR2 Camera View](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_camera_view.png)
+
+#### Downsampling
+
+This point cloud was massive -- 30+ MB -- which required downsampling because there was unnecessary overhead to the system and no real advantages over a downsampled version of the same.
+
+See next section for the output image.
+
+#### Cleaning
+
+The camera captured noisy data, as is obvious in the image in the 'downsampling' section.
+
+Here's the output of the same table after downsampling and cleaning:
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/cleaned.png)
+
+#### Passthrough Filter
+
+The next step is to extract only that part of the image that is relevant. For the purposes of this project, a passthrough filter had to be applied two times, as below:
+- 'Z' axis: To eliminate any noise from above and below the table
+- 'X' axis: To eliminate the interference from the sides (for example, the two colored 'objects' on the left and right sides)
+
+This gave me just what I needed for the rest of my pipeline:
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/sliced.png)
+
+#### Segmentation
+
+Now, with the sliced point cloud, the next step is to separate the table from the objects, for which we use RANSAC segmentatlon.
+
+* Segmented Table
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/segmented_table_pc.png)
+
+* Segmented Non-Table-Stuff (Targets)
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/segmented_objects_pc.png)
+
+#### Clustering
+
+This pipeline uses Euclidian Distance clustering, and produces the following object detections (as seen in the World # 3 test case):
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/object_list.png)
+
+### Classification & Labeling
+
+#### Classification
+
+This involved reading the model from the provided model file, obtaining the classifier, the label encoder, and the scaler, all of which are needed for proper classification.
+
+## Debugging
+
+The importance of being able to debug the point clouds obtained during training, and then those obtained at each point of the pipeline, cannot be overstated. At first I decided to just publish each of these point clouds to different topics, so that I could view what each stage was outputing through RViz's PointCloud2 visualizer. However, I found this to be a hassle for two reasons:
+- Because my computer was too slow to be able to be able to smoothly switch the PointCloud2 visualizer's topic between these topics, and
+- Because I wanted to be able to inspect the point clouds at each stage in more detail than RViz would allow (also because of the processor limitations above).
+
+So, I wrote a tool -- _capture_camera.py_ -- that would essentially output the following point clouds:
+- Original point cloud (received straight from the /pr2/world/points topic)
+- Downsampled PC
+- Cleaned PC
+- Sliced PCs (for each passthrough filter that I applied)
+- Segmented Inliers and Outliers (Table + Remaining items)
+- Clustered Objecs (color-coded, after clustering)
+- Each clustered object (these are what the classifier was classifying)
+
+The tool's help menu is below, as an illustration:
+
+```
+robond@udacity:~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts$ ./capture_camera.py --help
+usage: capture_camera.py [-h] -i INFILE -t TOPIC [-c COUNT]
+                         [-l [LEVELS [LEVELS ...]]] -o OUTFOLDER [-p]
+
+Perform advanced pick+place
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INFILE             Model file for the object recognition
+  -t TOPIC              Name of topic to capture. ['/pr2/world/points', ....]
+  -c COUNT              Number of times to snapshot
+  -l [LEVELS [LEVELS ...]]
+                        List of stages whose outputs will be saved to disk [0
+                        = Original] [1 = Downsampled] [2 = Cleaned] [3 =
+                        Sliced] [4 = Segmented] [5 = Object Cloud] [6 =
+                        Detected Objects]
+  -o OUTFOLDER          Folder where all the pipeline PCDs will be saved
+  -p                    Whether to plot the feature histograms (default:
+                        False)
+```
+
+As an example:
+
+```
+```
+
+## Results
+
+I was able to achieve 100% accuracy of detection, for all 3 worlds, as illustrated below.
+
+### World 1
+
+This world had only 3 objects:
+```
+object_list:
+  - name: biscuits
+    group: green
+  - name: soap
+    group: green
+  - name: soap2
+    group: red
+```
+
+Training parameters:
+- 20 samples for each object type
+- Features = [32 bins for RGB, 32 bins for HSV, 32 bins for Surface Normals]
+- Classifier: ExtraTreesClassifier (Though Linear SVM with 'rbf' kernel sufficed here due to small number of categories)
+
+#### Confusion Matrix
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p1_training_20.png)
+
+#### Labeled Output
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p1_labeled.png)
+
+
+### World 2
+
+This world had 5 objects:
+```
+object_list:
+  - name: biscuits
+    group: green
+  - name: soap
+    group: green
+  - name: book
+    group: red
+  - name: soap2
+    group: red
+  - name: glue
+    group: red
+```
+
+Training parameters:
+- 30 samples for each object type
+- Features = [32 bins for RGB, 32 bins for HSV, 32 bins for Surface Normals]
+- Classifier: ExtraTreesClassifier
+
+#### Confusion Matrix
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p2_training.png)
+
+#### Labeled Output
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p2_labeled.png)
+
+### World 3
+
+This world had 8 objects:
+```
+object_list:
+  - name: sticky_notes
+    group: red
+  - name: book
+    group: red
+  - name: snacks
+    group: green
+  - name: biscuits
+    group: green
+  - name: eraser
+    group: red
+  - name: soap2
+    group: green
+  - name: soap
+    group: green
+  - name: glue
+    group: red
+```
+
+Training parameters:
+- 50 samples for each object type
+- Features = [32 bins for RGB, 32 bins for HSV, 32 bins for Surface Normals]
+- Classifier: ExtraTreesClassifier (Though Linear SVM with 'rbf' kernel sufficed here due to small number of categories)
+
+#### Confusion Matrix
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_training.png)
+
+#### Labeled Output
+
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_labeled.png)
+
+## Conclusions
+
+Few things I learned from this exercise are:
+- That the resolution of the point clouds used for training the classifier had to match (at least to some extent) the resolution of the deployment point clouds. So, the voxel downsampling that I was performing at the start of the perception pipeline (prior to cleaning, segmentation, feature extraction etc) had to also be applied to the training point clouds, prior to feature extraction. Keeping these consistent really improved the accuracy of the classifier.
+- I had to switch to the _ExtraTreesClassifier_ for best results.
+- In general, I only had to use between 10-50 samples for each object type, during training. There was no need to train with more data.
+- I found that a combination of 3 types of features would be ideal for this classification:
+-- RGB histogram: This is because color is an important component of identification (though not the only one)
+-- HSV histogram: This is essential in the case where there are shadows and other lighting variation between the training and deployment captures.
+-- Normals histogram: This captures the shape of the object, which is clearly crucial in determining any type of object.
+
 
 ```
 object_list:
