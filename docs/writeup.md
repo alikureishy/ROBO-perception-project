@@ -288,11 +288,11 @@ This gave me just what I needed for the rest of my pipeline:
 
 Now, with the sliced point cloud, the next step is to separate the table from the objects, for which we use RANSAC segmentatlon.
 
-* Segmented Table
+* Segmented Table (Inlier points)
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/segmented_table_pc.png)
 
-* Segmented Non-Table-Stuff (Targets)
+* Segmented Non-Table-Stuff (Outlier points - with all the target objects)
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/segmented_objects_pc.png)
 
