@@ -425,7 +425,13 @@ The OUTFOLDER path will then contain a folder hierarchy containing debug point-c
 		...
 ```
 
-See [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs) for the actual persisted point cloud hierarchy for this project.
+See [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs) for the flattened point cloud (debug) objects for each of the 3 worlds, under this hierarchy:
+```
+	\runs
+		\p1			--> World # 1 (with the list of debug objects listed above under '<1>')
+		\p2			--> World # 2			"
+		\p3			--> World # 3			"
+```
 
 ## Results
 
