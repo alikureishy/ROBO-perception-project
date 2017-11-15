@@ -3,9 +3,34 @@
 
 # Robotics - Perception Pipeline
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Components](#components)
+    - [Simulation Environment](#simulation-environment)
+    - [Training Pipeline](#training-pipeline)
+        - [Sample Collection](#sample-collection)
+	- [Feature Extraction](#feature-extraction)
+	- [Training](#training)
+    - [Perception Pipeline](#perception-pipeline)
+        - [RGBD Camera View](#rgbd-camera-view)
+	- [Downsampling](#downsampling)
+	- [Cleaning](#cleaning)
+	- [Passthrough Filter](#passthrough-filter)
+	- [Segmentation](#segmentation)
+	- [Clustering](#clustering)
+	- [Classification](#classification)
+	- [Labeling](#labeling)
+- [Debugging](#debugging)
+- [Results](#results)
+    - [World 1](#world-1)
+    - [World 2](#world-2)
+    - [World 3](#world-3)
+- [Conclusions](#conclusions)
+
 ## Overview
 
-This was a Udacity project, built along the lines of the Amazon Challenge, for detecting objects in a cluttered environment, and invoking one of two robot arms to pick up and drop the objects in its associated bin.
+This was a Udacity project, built along the lines of the [Amazon Robotics Challenges] (https://www.amazonrobotics.com/#/roboticschallenge/past-challenges), for detecting objects in a cluttered environment, and invoking one of two robot arms to pick up and drop the objects in its associated bin.
 
 Note: The present version of the pipeline does not include the robot arm movement, but I hope to add it in at a later time. At present my goal was to complete this project and move on to the next one. 
 
@@ -179,7 +204,7 @@ The different pipeline stages below are implemented here. The overall pipeline i
 
 There are 6 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
 
-#### RGB-D Camera View
+#### RGBD Camera View
 
 Attached here is the original point cloud captured from the /prt/world/points topic.
 
