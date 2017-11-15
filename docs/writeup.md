@@ -30,7 +30,7 @@
 
 ## Overview
 
-This was a Udacity project, built along the lines of the [Amazon Robotics Challenges] (https://www.amazonrobotics.com/#/roboticschallenge/past-challenges), for detecting objects in a cluttered environment, and invoking one of two robot arms to pick up and drop the objects in its associated bin.
+This was a Udacity project, built along the lines of the [Amazon Robotics Challenges](https://www.amazonrobotics.com/#/roboticschallenge/past-challenges), for detecting objects in a cluttered environment, and invoking one of two robot arms to pick up and drop the objects in its associated bin.
 
 Note: The present version of the pipeline does not include the robot arm movement, but I hope to add it in at a later time. At present my goal was to complete this project and move on to the next one. 
 
@@ -213,7 +213,7 @@ accuracy score: 0.977443609023
 Training the classifier...
 Accuracy with held-out test-set...
 Prediction: [4] / Actual: 4
-Feature ranking:
+Feature ranking:			<-- Ranking (desc) of the top 20 most useful bins in the histograms
 	1. feature 102 (0.028090)
 	2. feature 155 (0.025194)
 	3. feature 100 (0.023304)
@@ -234,20 +234,25 @@ Feature ranking:
 	18. feature 98 (0.013236)
 	19. feature 99 (0.012634)
 	20. feature 33 (0.011953)
-	21. feature 153 (0.011354)
-	22. feature 128 (0.010987)
-	23. feature 154 (0.010794)
-	24. feature 147 (0.010639)
-	25. feature 126 (0.010471)
-	26. feature 114 (0.010303)
-	27. feature 96 (0.010085)
-	28. feature 66 (0.009864)
-	29. feature 65 (0.009289)
-	30. feature 136 (0.009167)
 Saving classifier to disk...
 ```
 
-The different pipeline stages below are implemented [here](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/src/sensor_stick/pipeline.py). The script to do the pick+place operation using this pipeline, is [here]()
+The different pipeline stages below are implemented [here](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/src/sensor_stick/pipeline.py).
+
+The script to do the pick+place operation using the pipeline methods discussed below, is:
+
+```
+    image, _ = downsampled, latency = downsample(image, leaf_ratio=0.003)
+    image, _ = cleaned, latency = clean(image, mean_k=50, std_dev_mul_thresh=1.0)
+    image, _ = sliced1, latency = slice(image, field_name='z', limits=[0.6,1.5])
+    image, _ = sliced2, latency = slice(image, field_name='y', limits=[-0.4,0.4])
+    inliers, latency = segmentize(image, distance_thresh=0.025)
+    table_cloud, non_table_cloud, latency = separate_segments(image, inliers)
+    objects_cloud, clusters, _, latency = clusterize_objects(non_table_cloud, cluster_tolerance=0.04, min_size=200, max_size=5000, debug=False)
+    ...
+    ...
+    detections, markers, object_clouds, latency = classify_objects(clusters, non_table_cloud, classifier, encoder, scaler)
+```
 
 There are 6 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
 
@@ -399,6 +404,8 @@ On running this utility, the OUTFOLDER path will have a folder hierarchy as foll
 		...
 ```
 
+See [here](https://github.com/safdark/ROBO-perception-project/tree/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs) for the actual persisted point cloud hierarchy for this project.
+
 ## Results
 
 I was able to achieve 100% accuracy of detection, for all 3 worlds, as illustrated below.
@@ -429,7 +436,9 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p1_labeled.png)
 
-See generated pick+place 'commands' file here.
+#### Generated YAML Instructions
+
+See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-perception-project/blob/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p1/p1_commands.yaml).
 
 ### World 2
 
@@ -461,7 +470,9 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p2_labeled.png)
 
-See generated pick+place 'commands' file here.
+#### Generated YAML Instructions
+
+See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-perception-project/blob/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p2/p2_commands.yaml).
 
 ### World 3
 
@@ -499,7 +510,9 @@ Training parameters:
 
 ![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/p3_labeled.png)
 
-See generated pick+place 'commands' file here.
+#### Generated YAML Instructions
+
+See generated pick+place 'commands' file [here](https://github.com/safdark/ROBO-perception-project/blob/master/RoboND-Perception-Project/pr2_robot/scripts/launches/runs/p3/p3_commands.yaml).
 
 ## Conclusions
 
