@@ -28,7 +28,7 @@ Traning involves collecting samples, extracting features, and then training a cl
 
 #### Sample Collection
 
-This would issue gazebo requests to sample each of the objects in a certain number of random orientations and positions, in order to take a snapshot to use as the reference point cloud for that object type. I created a library of a 1000 such reference point clouds for each of the 15 objects covered in this project:
+This would issue gazebo requests to sample each of the objects in a certain number of random orientations and positions, in order to take a snapshot to use as the reference point cloud for that object type. I created a library of a 1000 such reference point clouds for each of the 15 objects covered in this project, each categorized under a folder named after that object as shown below:
 
 ```
 robond@udacity:~/data/library$ ls -al
@@ -67,20 +67,17 @@ optional arguments:
   -t TOPIC      Topic to which to publish the sampled point clouds
 ```
 
-Each captured sample would be added to a folder corresponding to the object type.
-
 #### Feature Extraction
 
 The next stage was feature extraction, which involved the following pipeline for each point cloud:
 - Downsampling
-- Extract:
--- Histogram of 32 bins for each of the R, G and B channels
--- Histogram of 32 bins for each of the H, S and V channels
--- Histogram of 32 bins for the surface normals for the X, Y and Z axes
+- Extract (and concatenate together):
+	- Histogram of 32 bins for each of the R, G and B channels
+	- Histogram of 32 bins for each of the H, S and V channels
+	- Histogram of 32 bins for the surface normals for the X, Y and Z axes
 
 The final feature array for each point cloud, therefore, would contain 32 * 9 = 288 floats, as depicted in this image here:
-![Histogram](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/histogram.png)
-
+![Histogram](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/histogram_example.png)
 
 Feature extraction is triggered using this utility:
 ```
@@ -224,15 +221,19 @@ Now, with the sliced point cloud, the next step is to separate the table from th
 
 #### Clustering
 
-This pipeline uses Euclidian Distance clustering, and produces the following object detections (as seen in the World # 3 test case):
+Euclidian Distance clustering was used here to produces the following object detections (as seen in the World # 3 test case):
 
-![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/object_list.png)
+![PR2 Colored Objects](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/colored_objects.png)
+
+The coloring indicates the unique clusters that had been discovered -- since each cluster has been assigned a unique color here for this generated point cloud. This figure here shows 8 clusters having clearly been identified in world # 3.
 
 #### Classification
 
-This involved reading the model from the provided model file, obtaining the classifier, the label encoder, and the scaler, all of which are needed for proper classification.
+This involved reading the model from the provided model file, obtaining the classifier, the label encoder, and the scaler, all of which are needed for proper classification. The points for each clustered object above were then used to extract the point cloud of the actual object, from the segmented point cloud, to obtain the individual objects' point clouds, as shown here:
 
-Then, the same features would be extracted for the clustered objects above, as was done for the training samples, to generate a 288-bin histogram, which was then used in the classification, to obtain the corresponding label.
+![PR2 Object List](https://github.com/safdark/ROBO-perception-project/blob/master/docs/images/object_list.png)
+
+Then, the same features would be extracted for these clustered objects as was done for the training samples, to generate a 288-bin histogram, which was then used in the classification, to obtain the corresponding label.
 
 Each detected object's centroid was also determined, using the cluster points associated with it, across the x, y and z axes.
 
