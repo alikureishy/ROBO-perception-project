@@ -32,7 +32,7 @@
 
 This was a Udacity project, built along the lines of the [Amazon Robotics Challenges](https://www.amazonrobotics.com/#/roboticschallenge/past-challenges), for detecting objects in a cluttered environment, and invoking one of two robot arms to pick up and drop the objects in its associated bin.
 
-Note: The present version of the pipeline does not include the robot arm movement, but I hope to add it in at a later time. At present my goal was to complete this project and move on to the next one. 
+Note: The present version of the pipeline does not include the robot arm movement, but I hope to add it in at a later time. The immediate goal was to focus on the _perception_ portion of the project. 
 
 ## Components
 
