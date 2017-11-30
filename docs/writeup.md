@@ -267,7 +267,7 @@ The script to do the pick+place operation using the pipeline methods discussed b
     detections, markers, object_clouds, latency = classify_objects(clusters, non_table_cloud, classifier, encoder, scaler)
 ```
 
-There are 6 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
+There are 8 stages to this perception pipeline, discussed below, with illustrations. I will be using illustrations mostly from the World # 3 (Test Case # 3) for this, since it involved 8 object types and was the hardest portion of this assignment.
 
 #### RGBD Camera View
 
