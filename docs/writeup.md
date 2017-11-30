@@ -184,33 +184,6 @@ optional arguments:
 
 ```
 
-Note: See the Results section for the confusion matrices obtained for the 3 different worlds.
-
-### Perception Pipeline
-
-The 'pick_and_place.py' utility performs the perception pipeline, consisting of the following stages:
-- [RGBD Camera View](#rgbd-camera-view)
-- [Downsampling](#downsampling)
-- [Cleaning](#cleaning)
-- [Passthrough Filter](#passthrough-filter)
-- [Segmentation](#segmentation)
-- [Clustering](#clustering)
-- [Classification](#classification)
-- [Labeling](#labeling)
-
-```
-$> ./pick_and_place.py --help
-usage: pick_and_place.py [-h] -i INFILE -t TEST_SCENE -o OUTFILE
-
-Perform advanced pick+place
-
-optional arguments:
-  -h, --help     show this help message and exit
-  -i INFILE      Model file for the object recognition
-  -t TEST_SCENE  Test scene number
-  -o OUTFILE     YAML file to save the generated pick+place request sequence
-```
-
 As an example:
 ```
 $> ./train_svm.py -i ~/data/features/p3_d0_003_c32_h32_n32_c50.features -o ~/data/models/p3_etc_d0_003_c32_h32_n32_c50.model -p
@@ -248,6 +221,33 @@ Feature ranking:			<-- Ranking (desc) of the top 20 most useful bins in the hist
 	19. feature 99 (0.012634)
 	20. feature 33 (0.011953)
 Saving classifier to disk...
+```
+
+Note: See the Results section for the confusion matrices obtained for the 3 different worlds.
+
+### Perception Pipeline
+
+The 'pick_and_place.py' utility performs the perception pipeline, consisting of the following stages:
+- [RGBD Camera View](#rgbd-camera-view)
+- [Downsampling](#downsampling)
+- [Cleaning](#cleaning)
+- [Passthrough Filter](#passthrough-filter)
+- [Segmentation](#segmentation)
+- [Clustering](#clustering)
+- [Classification](#classification)
+- [Labeling](#labeling)
+
+```
+$> ./pick_and_place.py --help
+usage: pick_and_place.py [-h] -i INFILE -t TEST_SCENE -o OUTFILE
+
+Perform advanced pick+place
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -i INFILE      Model file for the object recognition
+  -t TEST_SCENE  Test scene number
+  -o OUTFILE     YAML file to save the generated pick+place request sequence
 ```
 
 The different pipeline stages below are implemented [here](https://github.com/safdark/ROBO-perception-project/blob/master/sensor_stick/src/sensor_stick/pipeline.py).
