@@ -188,6 +188,16 @@ Note: See the Results section for the confusion matrices obtained for the 3 diff
 
 ### Perception Pipeline
 
+The 'pick_and_place.py' utility performs the perception pipeline, consisting of the following stages:
+- [RGBD Camera View](#rgbd-camera-view)
+- [Downsampling](#downsampling)
+- [Cleaning](#cleaning)
+- [Passthrough Filter](#passthrough-filter)
+- [Segmentation](#segmentation)
+- [Clustering](#clustering)
+- [Classification](#classification)
+- [Labeling](#labeling)
+
 ```
 $> ./pick_and_place.py --help
 usage: pick_and_place.py [-h] -i INFILE -t TEST_SCENE -o OUTFILE
